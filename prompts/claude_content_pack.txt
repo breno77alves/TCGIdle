@@ -1,0 +1,17 @@
+Use the `content-and-card-generator` agent with the `create-game-data` and `generate-card-art-brief` skills.
+
+Create an original first content pack for this browser-based card game.
+
+Need:
+- 8 creatures
+- 4 attacks
+- 1 starting location
+- 2 NPC duelists
+- 1 Duelist Master
+- short flavor text
+- visual tags suitable for portrait prompts
+
+Rules:
+- keep content original
+- avoid direct franchise copying
+- output must be easy to convert into JS data files

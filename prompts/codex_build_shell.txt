@@ -1,0 +1,18 @@
+Use the `gameplay-builder` agent with the `implement-browser-feature`, `save-load-safety`, and `add-visible-feedback` skills.
+
+Build the initial product shell for the browser card game.
+
+Requirements:
+- plain HTML/CSS/JS only
+- no framework, no build step
+- index.html must open directly in browser
+- tabs for Collection, Deck, Expeditions, and Duel
+- selected tab must have clear visual state
+- state must persist through localStorage
+- include a polished top-level layout with clear panel hierarchy
+- no placeholder/dev wording in UI copy
+
+Deliver:
+1. files changed
+2. code
+3. manual browser test steps

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCG Idle — Tomo do Duelista</title>
+  <meta
+    name="description"
+    content="TCG Idle: um codex de duelista. Explore locais, componha o deck e resolva duelos no Limiar de Aurin."
+  >
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/cards.css">
+  <link rel="stylesheet" href="styles/duel.css">
+</head>
+<body data-current-tab="collection">
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <header class="sovereign-bar">
+        <div class="sovereign-brand">
+          <svg class="sigil" viewBox="0 0 64 64" aria-hidden="true">
+            <defs>
+              <linearGradient id="sigilGradient" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#E8C77A"/>
+                <stop offset="100%" stop-color="#A96B2E"/>
+              </linearGradient>
+            </defs>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="url(#sigilGradient)" stroke-width="1.5"/>
+            <path d="M32 8 L40 32 L32 56 L24 32 Z" fill="url(#sigilGradient)"/>
+            <circle cx="32" cy="32" r="4" fill="#0D0C0A"/>
+          </svg>
+          <div>
+            <p class="eyebrow">Tomo do Duelista</p>
+            <h1>TCG Idle</h1>
+          </div>
+        </div>
+
+        <div class="sovereign-stats">
+          <article class="sovereign-stat">
+            <span>Sessoes</span>
+            <strong id="sessions-value">0</strong>
+          </article>
+          <article class="sovereign-stat">
+            <span>Colecao</span>
+            <strong id="collection-value">0</strong>
+          </article>
+          <article class="sovereign-stat">
+            <span>Essencia</span>
+            <strong id="essence-value">0</strong>
+          </article>
+          <article class="sovereign-stat">
+            <span>Duelos</span>
+            <strong id="duels-value">0 / 0</strong>
+          </article>
+        </div>
+
+        <div class="sovereign-controls">
+          <button id="reset-button" type="button" class="ghost-button" title="Resetar a conta">Resetar conta</button>
+        </div>
+      </header>
+
+      <nav class="chapter-nav" aria-label="Secoes do tomo">
+        <button type="button" class="chapter-tab" data-tab-target="collection" data-mood="archive" aria-pressed="true">
+          <svg class="chapter-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M8 10 L24 6 L40 10 L40 40 L24 36 L8 40 Z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M24 6 L24 36" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M13 16 L19 14.5 M13 22 L19 20.5 M13 28 L19 26.5 M29 14.5 L35 16 M29 20.5 L35 22 M29 26.5 L35 28" stroke="currentColor" stroke-width="1"/>
+          </svg>
+          <span class="chapter-tab-text">
+            <strong>Colecao</strong>
+            <span>Arquivo de scans</span>
+          </span>
+        </button>
+
+        <button type="button" class="chapter-tab" data-tab-target="deck" data-mood="warroom" aria-pressed="false">
+          <svg class="chapter-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <rect x="8" y="10" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="22" y="10" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="8" y="26" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="22" y="26" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="36" cy="8" r="2" fill="currentColor"/>
+            <circle cx="36" cy="24" r="2" fill="currentColor"/>
+          </svg>
+          <span class="chapter-tab-text">
+            <strong>Deck</strong>
+            <span>Formacao titular</span>
+          </span>
+        </button>
+
+        <button type="button" class="chapter-tab" data-tab-target="expeditions" data-mood="field" aria-pressed="false">
+          <svg class="chapter-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="1"/>
+            <path d="M24 6 L27 24 L24 42 L21 24 Z" fill="currentColor"/>
+            <path d="M6 24 L24 21 L42 24 L24 27 Z" fill="currentColor" opacity="0.55"/>
+          </svg>
+          <span class="chapter-tab-text">
+            <strong>Expedicoes</strong>
+            <span>Rotas e scans</span>
+          </span>
+        </button>
+
+        <button type="button" class="chapter-tab" data-tab-target="duel" data-mood="arena" aria-pressed="false">
+          <svg class="chapter-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M8 10 L26 36 L30 32 L12 6 Z" fill="currentColor" opacity="0.85"/>
+            <path d="M40 10 L22 36 L18 32 L36 6 Z" fill="currentColor" opacity="0.55"/>
+            <circle cx="24" cy="38" r="3" fill="currentColor"/>
+          </svg>
+          <span class="chapter-tab-text">
+            <strong>Duelo</strong>
+            <span>Arena e provas especiais</span>
+          </span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="app-main">
+      <section class="chapter-stage">
+        <header class="chapter-plate">
+          <div>
+            <p class="eyebrow" id="chapter-eyebrow">Arquivo</p>
+            <h2 id="chapter-title">Colecao</h2>
+          </div>
+          <div class="chapter-plate-feedback">
+            <span class="feedback-label">Ultimo registro</span>
+            <strong id="last-action">—</strong>
+          </div>
+        </header>
+
+        <section class="chapter-canvas" data-chapter="collection">
+          <div class="chapter-body" id="collection-body"></div>
+        </section>
+
+        <section class="chapter-canvas" data-chapter="deck" hidden>
+          <div class="chapter-body" id="deck-body"></div>
+        </section>
+
+        <section class="chapter-canvas" data-chapter="expeditions" hidden>
+          <div class="chapter-body" id="expeditions-body"></div>
+        </section>
+
+        <section class="chapter-canvas" data-chapter="duel" hidden>
+          <div class="chapter-body" id="duel-body"></div>
+        </section>
+      </section>
+    </main>
+
+    <p id="toast" class="toast" role="status" aria-live="polite"></p>
+  </div>
+
+  <dialog id="reset-dialog" class="modal-dialog">
+    <form method="dialog" class="modal-panel">
+      <p class="eyebrow">Confirmacao</p>
+      <h3>Resetar conta</h3>
+      <p class="flavor">Isso apaga colecao, progresso e duelos e inicia uma nova conta com cartas suficientes para preencher o deck inteiro.</p>
+      <div class="modal-actions">
+        <button type="button" class="action-button action-button-secondary" data-reset-cancel>Cancelar</button>
+        <button type="button" class="action-button action-button-primary" data-reset-confirm>Sim, resetar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="src/data/tribes.js"></script>
+  <script src="src/data/creatures.js"></script>
+  <script src="src/data/actions.js"></script>
+  <script src="src/data/spells.js"></script>
+  <script src="src/data/locations.js"></script>
+  <script src="src/data/npcs.js"></script>
+  <script src="src/state.js"></script>
+  <script src="src/systems/rolling.js"></script>
+  <script src="src/systems/expedition.js"></script>
+  <script src="src/systems/deck.js"></script>
+  <script src="src/systems/duel.js"></script>
+  <script src="src/ui/cardRender.js"></script>
+  <script src="src/ui/collection.js"></script>
+  <script src="src/ui/expeditions.js"></script>
+  <script src="src/ui/deckBuilder.js"></script>
+  <script src="src/ui/duelView.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>

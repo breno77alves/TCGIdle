@@ -1,0 +1,19 @@
+Use the `visual-pipeline-director` agent with the `create-visual-pipeline` and `generate-card-art-brief` skills.
+
+Define a complete visual pipeline for this browser-based collectible card game.
+
+Requirements:
+- visual feel should lean toward polished collectible card readability similar to premium TCG presentation
+- must cover creature portraits, tribe icons, element icons, rarity badges, card frames, and card front layout rules
+- portraits must remain readable at small browser card sizes
+- output should be practical for use with image generation tools and manual asset organization
+
+Deliver:
+1. asset category breakdown
+2. folder structure
+3. naming conventions
+4. export rules
+5. portrait prompt template
+6. icon style rules
+7. card layout zones and hierarchy
+8. consistency checklist

@@ -1,0 +1,21 @@
+Use the `idle-economy-designer` agent with the `design-idle-economy` skill.
+
+Design the early and mid-game economy for this polished browser idle card game.
+
+Cover:
+- expedition durations
+- reward cadence
+- card drop expectations
+- duplicate conversion into essence
+- reroll pricing and expected progression
+- NPC duel reward pacing
+- streak rewards
+- zone unlock pacing
+- offline progression cap
+
+Output:
+1. target player experience
+2. source/sink map
+3. recommended starting numbers
+4. tuning levers
+5. likely failure cases to watch in playtests

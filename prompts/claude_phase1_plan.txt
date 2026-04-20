@@ -1,0 +1,21 @@
+Use the `system-architect` agent and the `phase-planning` skill.
+
+Context:
+- This project is a polished browser-based idle card game.
+- Stack is HTML + CSS + JS only.
+- No build step, no framework, no backend.
+- Save system uses localStorage.
+- The implementation must feel like a product, not a prototype.
+
+Task:
+Plan the next complete implementation slice for the game based on PLAN.md.
+Prioritize the shortest path to a polished, clearly functional gameplay loop:
+expedition -> new card -> collection/deck update -> duel -> result -> repeat.
+
+Output:
+1. recommended slice
+2. files to touch
+3. implementation order
+4. persistence implications
+5. visible UI states that must exist
+6. what should be deferred

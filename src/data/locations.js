@@ -1,0 +1,192 @@
+(function registerLocations(global) {
+  const LOCATIONS = [
+    {
+      id: "limiar-de-aurin",
+      name: "Limiar de Aurin",
+      portrait: "Arte/ArtWork/Locations/grid.png",
+      tagline: "Clareira de entrada onde o mapa do tomo desperta.",
+      description: "Primeira rota do duelista. As criaturas daqui sao ideais para iniciar scans e revelar caminhos vizinhos.",
+      durationMs: 30000,
+      dropCountRange: [1, 2],
+      rarityLabel: "Inicial",
+      discoveryChance: 0.12,
+      mapNode: { x: 24, y: 44 },
+      adjacentLocationIds: ["passagem-de-ynmar", "praia-de-mifnar"],
+      actionPool: [
+        { actionId: "golpe-do-zefiro", weight: 3 },
+        { actionId: "olhar-atento", weight: 2 },
+      ],
+      spellPool: [
+        { spellId: "visor-do-futuro", weight: 2 },
+        { spellId: "primeiros-socorros", weight: 2 },
+      ],
+      creaturePool: [
+        { creatureId: "belmon", weight: 3 },
+        { creatureId: "hirum", weight: 3 },
+        { creatureId: "grimodari", weight: 2 },
+        { creatureId: "ygar", weight: 2 },
+        { creatureId: "kirr", weight: 3 },
+        { creatureId: "samish", weight: 3 },
+      ],
+      npcs: ["vinsmor-aprendiz", "vinsmor"],
+      unlockedByDefault: true,
+    },
+    {
+      id: "passagem-de-ynmar",
+      name: "Passagem de Ynmar",
+      portrait: "Arte/ArtWork/Locations/PassagemDeYnmar.png",
+      tagline: "Corredor cristalino de ventos que ecoam rastros antigos.",
+      description: "Rota intermediaria de fluxo rapido. Criaturas aereas e batedores aparecem com frequencia.",
+      durationMs: 40000,
+      dropCountRange: [2, 3],
+      rarityLabel: "Expansao",
+      discoveryChance: 0.1,
+      mapNode: { x: 46, y: 20 },
+      adjacentLocationIds: ["limiar-de-aurin", "colonia-de-reinos"],
+      actionPool: [
+        { actionId: "golpe-do-zefiro", weight: 2 },
+        { actionId: "investida-fulminante", weight: 2 },
+        { actionId: "olhar-atento", weight: 3 },
+      ],
+      spellPool: [
+        { spellId: "sensor-de-poder", weight: 2 },
+        { spellId: "visor-do-futuro", weight: 1 },
+      ],
+      creaturePool: [
+        { creatureId: "hirum", weight: 3 },
+        { creatureId: "kirr", weight: 4 },
+        { creatureId: "samish", weight: 2 },
+        { creatureId: "belmon", weight: 2 },
+      ],
+      npcs: ["talren"],
+      unlockedByDefault: false,
+    },
+    {
+      id: "praia-de-mifnar",
+      name: "Praia de Mifnar",
+      portrait: "Arte/ArtWork/Locations/PraiaDeMifnar.png",
+      tagline: "Faixa costeira onde mar e cinzas encobrem sinais raros.",
+      description: "A mare traz ecos de criaturas resistentes e scans mais densos conforme o campo se estabiliza.",
+      durationMs: 45000,
+      dropCountRange: [2, 3],
+      rarityLabel: "Maritima",
+      discoveryChance: 0.1,
+      mapNode: { x: 46, y: 68 },
+      adjacentLocationIds: ["limiar-de-aurin", "colonia-de-reinos"],
+      actionPool: [
+        { actionId: "impacto-ardente", weight: 3 },
+        { actionId: "vibora-raivosa", weight: 2 },
+      ],
+      spellPool: [
+        { spellId: "primeiros-socorros", weight: 1 },
+        { spellId: "troca-emergencial", weight: 2 },
+      ],
+      creaturePool: [
+        { creatureId: "samish", weight: 4 },
+        { creatureId: "belmon", weight: 2 },
+        { creatureId: "grimodari", weight: 2 },
+        { creatureId: "ygar", weight: 3 },
+      ],
+      npcs: ["serka"],
+      unlockedByDefault: false,
+    },
+    {
+      id: "colonia-de-reinos",
+      name: "Colonia de Reinos",
+      portrait: "Arte/ArtWork/Locations/ColoniaDeReinos.png",
+      tagline: "Nucleo fortificado onde tribos disputam dominio tatico.",
+      description: "Zona de medio para alto risco. O fluxo de criaturas e mais intenso e abre o caminho do cosmos.",
+      durationMs: 52000,
+      dropCountRange: [3, 4],
+      rarityLabel: "Dominio",
+      discoveryChance: 0.08,
+      mapNode: { x: 64, y: 44 },
+      adjacentLocationIds: ["passagem-de-ynmar", "praia-de-mifnar", "cinturao-do-passado", "profundeza-do-cosmos"],
+      actionPool: [
+        { actionId: "poder-da-natureza", weight: 3 },
+        { actionId: "raio-concentrado", weight: 2 },
+        { actionId: "investida-fulminante", weight: 1 },
+      ],
+      spellPool: [
+        { spellId: "sensor-de-poder", weight: 2 },
+        { spellId: "meditador", weight: 2 },
+      ],
+      creaturePool: [
+        { creatureId: "grimodari", weight: 4 },
+        { creatureId: "ygar", weight: 4 },
+        { creatureId: "belmon", weight: 2 },
+        { creatureId: "hirum", weight: 2 },
+      ],
+      npcs: ["orvath"],
+      unlockedByDefault: false,
+    },
+    {
+      id: "cinturao-do-passado",
+      name: "Cinturao do Passado",
+      portrait: "Arte/ArtWork/Locations/CinturaoDoPassado.png",
+      tagline: "Ruinas em orbita onde ecos antigos se repetem em ciclos.",
+      description: "Rota de alta leitura, com sinais antigos e janelas raras para scans de elite.",
+      durationMs: 56000,
+      dropCountRange: [3, 4],
+      rarityLabel: "Arcano",
+      discoveryChance: 0.06,
+      mapNode: { x: 82, y: 24 },
+      adjacentLocationIds: ["colonia-de-reinos", "profundeza-do-cosmos"],
+      actionPool: [
+        { actionId: "chuva-de-estrelas", weight: 2 },
+        { actionId: "raio-concentrado", weight: 2 },
+      ],
+      spellPool: [
+        { spellId: "sorte-de-iniciante", weight: 1 },
+        { spellId: "sensor-de-poder", weight: 2 },
+      ],
+      creaturePool: [
+        { creatureId: "hirum", weight: 2 },
+        { creatureId: "grimodari", weight: 3 },
+        { creatureId: "ygar", weight: 3 },
+        { creatureId: "kirr", weight: 2 },
+      ],
+      npcs: [],
+      unlockedByDefault: false,
+    },
+    {
+      id: "profundeza-do-cosmos",
+      name: "Profundeza do Cosmos",
+      portrait: "Arte/ArtWork/Locations/profundezadocosmos.png",
+      tagline: "Camada final onde o vazio distorce energia e percepcao.",
+      description: "Rota rara do tomo. Scans daqui tendem a gerar leituras valiosas e marcas de energia extremas.",
+      durationMs: 60000,
+      dropCountRange: [3, 4],
+      rarityLabel: "Cosmica",
+      discoveryChance: 0.04,
+      mapNode: { x: 84, y: 66 },
+      adjacentLocationIds: ["colonia-de-reinos", "cinturao-do-passado"],
+      actionPool: [
+        { actionId: "chuva-de-estrelas", weight: 3 },
+        { actionId: "raio-concentrado", weight: 2 },
+        { actionId: "poder-da-natureza", weight: 1 },
+      ],
+      spellPool: [
+        { spellId: "sorte-de-iniciante", weight: 2 },
+        { spellId: "meditador", weight: 2 },
+      ],
+      creaturePool: [
+        { creatureId: "grimodari", weight: 3 },
+        { creatureId: "ygar", weight: 3 },
+        { creatureId: "kirr", weight: 2 },
+        { creatureId: "samish", weight: 2 },
+      ],
+      npcs: ["nyra"],
+      unlockedByDefault: false,
+    },
+  ];
+
+  function getLocation(id) {
+    return LOCATIONS.find((location) => location.id === id) || null;
+  }
+
+  global.TCGIdleData = global.TCGIdleData || {};
+  global.TCGIdleData.locations = LOCATIONS;
+  global.TCGIdleData.starterLocationCards = LOCATIONS.filter((location) => location.unlockedByDefault).map((location) => location.id);
+  global.TCGIdleData.getLocation = getLocation;
+})(window);
