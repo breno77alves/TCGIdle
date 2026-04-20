@@ -5,10 +5,10 @@
       name: "Lamina da Vanguarda",
       portrait: "Arte/ArtWork/Equipment/eternalSword.png",
       tagline: "Arma calibrada para as trocas da linha de frente.",
-      description: "Reforca ataques de criaturas posicionadas na vanguarda.",
+      description: "Enquanto o portador estiver engajado na frontline, causa mais 5 de dano em cada ataque.",
       role: "offense",
       duelModifiers: [
-        { trigger: "onAttack", lane: "frontline", flatDamage: 4, source: "Lamina da Vanguarda" },
+        { trigger: "onAttack", lane: "frontline", flatDamage: 5, source: "Lamina da Vanguarda" },
       ],
     },
     {
@@ -16,10 +16,10 @@
       name: "Escudo de Pedra",
       portrait: "Arte/ArtWork/Equipment/EscudoDePedra.png",
       tagline: "Barreira densa para absorver o primeiro impacto.",
-      description: "Melhora a mitigacao do usuario contra golpes pesados.",
+      description: "Enquanto o portador estiver engajado, reduz em 5 o dano recebido.",
       role: "guard",
       duelModifiers: [
-        { trigger: "onDefend", flatMitigation: 4, source: "Escudo de Pedra" },
+        { trigger: "onDefend", flatMitigation: 5, source: "Escudo de Pedra" },
       ],
     },
     {
@@ -27,7 +27,7 @@
       name: "Visor de Alcance",
       portrait: "Arte/ArtWork/Equipment/visordealcance.png",
       tagline: "Leitura precisa para suportes posicionados atras.",
-      description: "Favorece checks de Sabedoria e dano de criaturas na retaguarda.",
+      description: "Enquanto o portador estiver engajado na backline, converte parte da SA em dano adicional.",
       role: "support",
       duelModifiers: [
         { trigger: "onAttack", lane: "backline", statScale: [{ stat: "wisdom", ratio: 0.08 }], source: "Visor de Alcance" },
@@ -38,7 +38,7 @@
       name: "Propulsor Cinetico",
       portrait: "Arte/ArtWork/Equipment/PropulsorGravitacional.png",
       tagline: "Arranque instantaneo para unidades velozes.",
-      description: "Converte parte da Velocidade em dano e iniciativa.",
+      description: "Enquanto o portador estiver engajado, converte parte da VL em dano adicional.",
       role: "tempo",
       duelModifiers: [
         { trigger: "onAttack", statScale: [{ stat: "speed", ratio: 0.06 }], source: "Propulsor Cinetico" },
@@ -49,10 +49,10 @@
       name: "Coroa da Memoria",
       portrait: "Arte/ArtWork/Equipment/coroadarainha.png",
       tagline: "Catalisador para checks de leitura e mente.",
-      description: "Aumenta a margem de sucesso de acoes baseadas em Sabedoria.",
+      description: "Enquanto o portador estiver engajado, aumenta em 10 a margem dos checks de SA.",
       role: "mind",
       duelModifiers: [
-        { trigger: "onCheck", stat: "wisdom", thresholdBonus: 8, source: "Coroa da Memoria" },
+        { trigger: "onCheck", stat: "wisdom", thresholdBonus: 10, source: "Coroa da Memoria" },
       ],
     },
     {
@@ -60,10 +60,10 @@
       name: "Nucleo de Reserva",
       portrait: "Arte/ArtWork/Equipment/modulodeforca.png",
       tagline: "Reserva de energia para criaturas mais frageis.",
-      description: "Concede um pequeno reforco de Energia ao entrar no duelo.",
+      description: "Enquanto o portador estiver engajado, causa mais 5 de dano em cada troca.",
       role: "battery",
       duelModifiers: [
-        { trigger: "startOfBattle", bonusEnergy: 12, source: "Nucleo de Reserva" },
+        { trigger: "onAttack", flatDamage: 5, source: "Nucleo de Reserva" },
       ],
     },
   ];

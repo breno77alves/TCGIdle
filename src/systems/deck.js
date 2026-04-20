@@ -19,11 +19,18 @@
     if (sectionName === "creatures") {
       return getCreatureSlots(state).map((slot) => slot && slot.instanceId ? slot.instanceId : null);
     }
+    if (sectionName === "equipment") {
+      return getCreatureSlots(state).map((slot) => slot && slot.equipmentId ? slot.equipmentId : null);
+    }
     return (state.deck.sections && state.deck.sections[sectionName]) || [];
   }
 
   function getCreatureSlot(state, slotIndex) {
-    return getCreatureSlots(state)[slotIndex] || { instanceId: null, lane: slotIndex < 3 ? "frontline" : "backline" };
+    return getCreatureSlots(state)[slotIndex] || {
+      instanceId: null,
+      lane: slotIndex < 3 ? "frontline" : "backline",
+      equipmentId: null,
+    };
   }
 
   function getCardsByType(state, cardType) {
@@ -47,6 +54,9 @@
     if (!card) return { ok: false, reason: "Carta nao encontrada na colecao." };
     if (card.cardType !== config.cardType) {
       return { ok: false, reason: "Essa secao aceita apenas cartas de " + config.cardType + "." };
+    }
+    if (sectionName === "equipment" && !getCreatureSlot(state, slotIndex).instanceId) {
+      return { ok: false, reason: "Equipe uma criatura nesse espaco antes de vincular um equipamento." };
     }
 
     const section = getSection(state, sectionName);
@@ -75,6 +85,16 @@
       state.deck.creatureSlots[slotIndex] = {
         instanceId: instanceId,
         lane: current.lane === "backline" ? "backline" : "frontline",
+        equipmentId: current.equipmentId || null,
+      };
+      return { ok: true };
+    }
+    if (sectionName === "equipment") {
+      const current = getCreatureSlot(state, slotIndex);
+      state.deck.creatureSlots[slotIndex] = {
+        instanceId: current.instanceId || null,
+        lane: current.lane === "backline" ? "backline" : "frontline",
+        equipmentId: instanceId,
       };
       return { ok: true };
     }
@@ -89,6 +109,16 @@
       state.deck.creatureSlots[slotIndex] = {
         instanceId: null,
         lane: current.lane === "backline" ? "backline" : "frontline",
+        equipmentId: null,
+      };
+      return { ok: true };
+    }
+    if (sectionName === "equipment") {
+      const current = getCreatureSlot(state, slotIndex);
+      state.deck.creatureSlots[slotIndex] = {
+        instanceId: current.instanceId || null,
+        lane: current.lane === "backline" ? "backline" : "frontline",
+        equipmentId: null,
       };
       return { ok: true };
     }
@@ -102,6 +132,7 @@
     state.deck.creatureSlots[slotIndex] = {
       instanceId: current.instanceId || null,
       lane: nextLane,
+      equipmentId: current.equipmentId || null,
     };
     return { ok: true };
   }

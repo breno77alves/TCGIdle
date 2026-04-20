@@ -1,6 +1,6 @@
 (function bootstrapState(global) {
   const STORAGE_KEY = "tcg-idle-save";
-  const SAVE_VERSION = 5;
+  const SAVE_VERSION = 6;
   const STARTER_LOCATION_COPIES = 6;
 
   function makeInstance(prefix, index) {
@@ -65,12 +65,12 @@
         creatureSlots: creatureCards.slice(0, 6).map((card, index) => ({
           instanceId: card.instanceId,
           lane: index < 3 ? "frontline" : "backline",
+          equipmentId: equipmentCards[index] ? equipmentCards[index].instanceId : null,
         })),
         sections: {
           locations: locationCards.slice(0, 6).map((card) => card.instanceId),
           actions: actionCards.slice(0, 20).map((card) => card.instanceId),
           spells: spellCards.slice(0, 6).map((card) => card.instanceId),
-          equipment: equipmentCards.slice(0, 6).map((card) => card.instanceId),
         },
       },
       expeditions: {
@@ -165,7 +165,7 @@
     return next;
   }
 
-  function sanitizeCreatureSlots(candidate, validIds, fallback) {
+  function sanitizeCreatureSlots(candidate, validIds, fallback, equipmentIds) {
     const source = Array.isArray(candidate) && candidate.length ? candidate : (Array.isArray(fallback) ? fallback : []);
     const next = [];
     for (let i = 0; i < 6; i += 1) {
@@ -174,11 +174,16 @@
         next.push({
           instanceId: typeof entry.instanceId === "string" && validIds.has(entry.instanceId) ? entry.instanceId : null,
           lane: entry.lane === "backline" ? "backline" : "frontline",
+          equipmentId: typeof entry.equipmentId === "string" && equipmentIds.has(entry.equipmentId) ? entry.equipmentId : null,
         });
         continue;
       }
       const legacyId = typeof entry === "string" && validIds.has(entry) ? entry : null;
-      next.push({ instanceId: legacyId, lane: i < 3 ? "frontline" : "backline" });
+      next.push({
+        instanceId: legacyId,
+        lane: i < 3 ? "frontline" : "backline",
+        equipmentId: null,
+      });
     }
     return next;
   }
@@ -195,13 +200,19 @@
       equipment: new Set(cards.filter((card) => card.cardType === "equipment").map((card) => card.instanceId)),
     };
 
+    const creatureSlots = sanitizeCreatureSlots(safe.creatureSlots || (sections.creatures || safe.slots), validByType.creature, defaults.deck.creatureSlots, validByType.equipment);
+    const legacyEquipment = sanitizeSection(sections.equipment, validByType.equipment, defaults.deck.creatureSlots.map((slot) => slot.equipmentId || null), 6);
+    creatureSlots.forEach((slot, index) => {
+      if (!slot.equipmentId) slot.equipmentId = legacyEquipment[index] || null;
+      if (!slot.instanceId) slot.equipmentId = null;
+    });
+
     return {
-      creatureSlots: sanitizeCreatureSlots(safe.creatureSlots || (sections.creatures || safe.slots), validByType.creature, defaults.deck.creatureSlots),
+      creatureSlots: creatureSlots,
       sections: {
         locations: sanitizeSection(sections.locations || (safe.locationSlot ? [safe.locationSlot] : null), validByType.location, defaults.deck.sections.locations, 6),
         actions: sanitizeSection(sections.actions, validByType.action, defaults.deck.sections.actions, 20),
         spells: sanitizeSection(sections.spells, validByType.spell, defaults.deck.sections.spells, 6),
-        equipment: sanitizeSection(sections.equipment, validByType.equipment, defaults.deck.sections.equipment, 6),
       },
     };
   }
@@ -282,6 +293,10 @@
 
     if (version < 5) {
       migrated.meta.lastAction = "Save migrado para v5 com formacao por linha e arsenal de combate expandido";
+    }
+
+    if (version < 6) {
+      migrated.meta.lastAction = "Save migrado para v6 com equipamentos vinculados por criatura e dano unificado";
     }
 
     return migrated;

@@ -59,14 +59,15 @@
 
   function normalizeDamageProfile(meta) {
     const profile = meta && meta.damageProfile ? meta.damageProfile : meta || {};
-    const elemental = [];
-    const rawElemental = profile.elemental || meta && meta.elementalDamage || [];
+    const rawElemental = profile.elemental || meta && meta.elementalDamage || 0;
+    let elemental = 0;
     if (Array.isArray(rawElemental)) {
       rawElemental.forEach((entry) => {
-        if (!entry || !entry.element) return;
-        const amount = Number.isFinite(entry.amount) ? entry.amount : (Number.isFinite(entry.damage) ? entry.damage : 0);
-        if (amount <= 0) return;
-        elemental.push({ element: entry.element, amount: amount });
+        elemental += Number.isFinite(entry && entry.amount) ? entry.amount : (Number.isFinite(entry && entry.damage) ? entry.damage : 0);
+      });
+    } else if (rawElemental && typeof rawElemental === "object") {
+      Object.keys(rawElemental).forEach((key) => {
+        elemental += Number.isFinite(rawElemental[key]) ? rawElemental[key] : 0;
       });
     }
     return {
@@ -78,28 +79,21 @@
     };
   }
 
-  function getElementLabel(element) {
-    const labels = {
-      fire: "Elem Fogo",
-      water: "Elem Agua",
-      earth: "Elem Terra",
-      air: "Elem Ar",
-    };
-    return labels[element] || ("Elem " + element);
-  }
-
   function getDamageEntries(meta, options) {
-    const settings = Object.assign({ includeBase: true }, options);
+    const settings = Object.assign({ includeBase: true, fixedOrder: true, showZero: true }, options);
     const profile = normalizeDamageProfile(meta);
-    const entries = [];
-    if (settings.includeBase && profile.base > 0) entries.push({ tone: "base", label: "Base", value: profile.base });
-    if (profile.cosmic > 0) entries.push({ tone: "cosmic", label: "Cosmico", value: profile.cosmic });
-    profile.elemental.forEach((entry) => {
-      entries.push({ tone: "elemental", label: getElementLabel(entry.element), value: entry.amount });
+    const all = [
+      { tone: "base", label: "Base", value: profile.base },
+      { tone: "cosmic", label: "Cosmico", value: profile.cosmic },
+      { tone: "elemental", label: "Elemental", value: profile.elemental },
+      { tone: "magic", label: "Magico", value: profile.magic },
+      { tone: "true", label: "Verdadeiro", value: profile.true },
+    ];
+    return all.filter((entry) => {
+      if (entry.tone === "base" && !settings.includeBase) return false;
+      if (settings.showZero) return true;
+      return entry.value > 0;
     });
-    if (profile.magic > 0) entries.push({ tone: "magic", label: "Magico", value: profile.magic });
-    if (profile.true > 0) entries.push({ tone: "true", label: "Verdadeiro", value: profile.true });
-    return entries;
   }
 
   function describeScaleEntry(entry) {
@@ -171,6 +165,7 @@
       const row = doc.createElement("div");
       row.className = "damage-chip";
       row.dataset.tone = entry.tone;
+       if (!entry.value) row.dataset.zero = "true";
       row.innerHTML = "<span>" + entry.label + "</span><strong>" + entry.value + "</strong>";
       wrap.appendChild(row);
     });
@@ -211,7 +206,7 @@
       title: info.title,
       effectText: getEffectText(card, info),
       tokenLabel: getTokenLabel(card, info),
-      damageEntries: getDamageEntries(info.meta, { includeBase: true }),
+      damageEntries: getDamageEntries(info.meta, { includeBase: true, fixedOrder: true, showZero: true }),
       info: info,
     };
   }

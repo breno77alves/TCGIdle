@@ -4,15 +4,13 @@
     return list[Math.floor(Math.random() * list.length)];
   }
 
-  function normalizeElements(base) {
-    if (!base) return [];
-    if (Array.isArray(base.elements)) return base.elements.slice();
-    if (typeof base.element === "string" && base.element) return [base.element];
-    return [];
-  }
-
   function cloneModifiers(list) {
     return Array.isArray(list) ? list.map((entry) => Object.assign({}, entry)) : [];
+  }
+
+  function roundToFive(value) {
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return Math.round(value / 5) * 5;
   }
 
   function toNumber(value, fallback) {
@@ -22,32 +20,30 @@
   function getDefaultCreatureBaseDamage(stats) {
     const power = stats && Number.isFinite(stats.power) ? stats.power : 0;
     const speed = stats && Number.isFinite(stats.speed) ? stats.speed : 0;
-    return Math.max(2, Math.round((power + speed) / 40));
+    return Math.max(5, roundToFive((power + speed) / 40));
   }
 
   function normalizeDamageProfile(source, defaultBase) {
     const profile = source && source.damageProfile ? source.damageProfile : source || {};
-    const elemental = [];
-    const rawElemental = profile.elemental || source && source.elementalDamage || [];
+    const rawElemental = profile.elemental || source && source.elementalDamage || 0;
+    let elemental = 0;
     if (Array.isArray(rawElemental)) {
       rawElemental.forEach((entry) => {
-        if (!entry || !entry.element) return;
-        elemental.push({
-          element: entry.element,
-          amount: toNumber(entry.amount, entry.damage),
-        });
+        elemental += toNumber(entry && entry.amount, entry && entry.damage);
       });
     } else if (rawElemental && typeof rawElemental === "object") {
-      Object.keys(rawElemental).forEach((element) => {
-        elemental.push({ element: element, amount: toNumber(rawElemental[element], 0) });
+      Object.keys(rawElemental).forEach((key) => {
+        elemental += toNumber(rawElemental[key], 0);
       });
+    } else {
+      elemental = toNumber(rawElemental, 0);
     }
     return {
-      base: toNumber(profile.base, source && source.baseDamage) || toNumber(defaultBase, 0),
-      cosmic: toNumber(profile.cosmic, source && source.cosmicDamage),
-      magic: toNumber(profile.magic, source && source.magicDamage),
-      true: toNumber(profile.true, source && source.trueDamage),
-      elemental: elemental.filter((entry) => entry.amount > 0),
+      base: roundToFive(toNumber(profile.base, source && source.baseDamage) || toNumber(defaultBase, 0)),
+      cosmic: roundToFive(toNumber(profile.cosmic, source && source.cosmicDamage)),
+      elemental: roundToFive(elemental),
+      magic: roundToFive(toNumber(profile.magic, source && source.magicDamage)),
+      true: roundToFive(toNumber(profile.true, source && source.trueDamage)),
     };
   }
 
@@ -70,26 +66,15 @@
     return target;
   }
 
-  function materializeDamageProfile(profile, attackerElements) {
+  function materializeDamageProfile(profile) {
     const applied = emptyDamageBreakdown();
-    const matchedEntries = [];
-    applied.base = toNumber(profile && profile.base, 0);
-    applied.cosmic = toNumber(profile && profile.cosmic, 0);
-    applied.magic = toNumber(profile && profile.magic, 0);
-    applied.true = toNumber(profile && profile.true, 0);
-    (profile && profile.elemental || []).forEach((entry) => {
-      if (!entry || attackerElements.indexOf(entry.element) < 0) return;
-      const amount = toNumber(entry.amount, entry.damage);
-      if (amount <= 0) return;
-      applied.elemental += amount;
-      matchedEntries.push({
-        element: entry.element,
-        amount: amount,
-      });
-    });
+    applied.base = roundToFive(toNumber(profile && profile.base, 0));
+    applied.cosmic = roundToFive(toNumber(profile && profile.cosmic, 0));
+    applied.elemental = roundToFive(toNumber(profile && profile.elemental, 0));
+    applied.magic = roundToFive(toNumber(profile && profile.magic, 0));
+    applied.true = roundToFive(toNumber(profile && profile.true, 0));
     return {
       totals: applied,
-      matchedEntries: matchedEntries,
     };
   }
 
@@ -114,7 +99,6 @@
       baseId: card.baseId,
       name: base ? base.name : card.baseId,
       tribe: base ? base.tribe : null,
-      elements: normalizeElements(base),
       damageProfile: normalizeDamageProfile(base, getDefaultCreatureBaseDamage(card.stats)),
       portrait: base ? base.portrait : "",
       stats: Object.assign({}, card.stats),
@@ -238,7 +222,7 @@
       result.bonusEnergy += effect.bonusEnergy || 0;
       if (Array.isArray(effect.statScale)) {
         effect.statScale.forEach((entry) => {
-          result.flatDamage += Math.round((ctx.actor.stats[entry.stat] || 0) * (entry.ratio || 0));
+          result.flatDamage += roundToFive((ctx.actor.stats[entry.stat] || 0) * (entry.ratio || 0));
         });
       }
       if (effect.source) result.logs.push(effect.source);
@@ -273,7 +257,7 @@
       name: "Impacto Basico",
       role: "fallback",
       damageProfile: {
-        base: 0,
+        base: 5,
       },
       checks: [],
     };
@@ -316,26 +300,25 @@
       target: attacker,
     });
 
-    const creaturePacket = materializeDamageProfile(attacker.damageProfile, attacker.elements);
-    const actionPacket = materializeDamageProfile(normalizeDamageProfile(action, 0), attacker.elements);
+    const creaturePacket = materializeDamageProfile(attacker.damageProfile);
+    const actionPacket = materializeDamageProfile(normalizeDamageProfile(action, 0));
     const preModifier = addDamageBreakdown(emptyDamageBreakdown(), creaturePacket.totals);
     addDamageBreakdown(preModifier, actionPacket.totals);
-    preModifier.base += attackEffects.flatDamage;
-    preModifier.base += resolveActionCheck(action, attacker, attackerSide, defender, detailLogs);
+    preModifier.base = roundToFive(preModifier.base + attackEffects.flatDamage + resolveActionCheck(action, attacker, attackerSide, defender, detailLogs));
 
     const scaled = {
-      base: Math.round(preModifier.base * (1 + attackEffects.percentDamage)),
-      cosmic: Math.round(preModifier.cosmic * (1 + attackEffects.percentDamage)),
-      elemental: Math.round(preModifier.elemental * (1 + attackEffects.percentDamage)),
-      magic: Math.round(preModifier.magic * (1 + attackEffects.percentDamage)),
-      true: preModifier.true,
+      base: roundToFive(preModifier.base * (1 + attackEffects.percentDamage)),
+      cosmic: roundToFive(preModifier.cosmic * (1 + attackEffects.percentDamage)),
+      elemental: roundToFive(preModifier.elemental * (1 + attackEffects.percentDamage)),
+      magic: roundToFive(preModifier.magic * (1 + attackEffects.percentDamage)),
+      true: roundToFive(preModifier.true),
     };
 
     const rawDamage = scaled.base + scaled.cosmic + scaled.elemental + scaled.magic + scaled.true;
     const mitigableDamage = scaled.base + scaled.cosmic + scaled.elemental + scaled.magic;
-    const wisdomGuard = Math.round((defender.stats.wisdom || 0) * 0.08);
-    const mitigatedBlock = Math.round((mitigableDamage * (1 - defendEffects.percentMitigation)) - (wisdomGuard + defendEffects.flatMitigation));
-    const finalDamage = Math.max(1, Math.max(0, mitigatedBlock) + scaled.true);
+    const wisdomGuard = roundToFive((defender.stats.wisdom || 0) * 0.08);
+    const mitigatedBlock = roundToFive((mitigableDamage * (1 - defendEffects.percentMitigation)) - (wisdomGuard + defendEffects.flatMitigation));
+    const finalDamage = Math.max(5, Math.max(0, mitigatedBlock) + scaled.true);
 
     return {
       actionName: action.name,
@@ -344,8 +327,6 @@
       breakdown: scaled,
       creatureDamage: creaturePacket.totals,
       actionDamage: actionPacket.totals,
-      creatureElementalMatches: creaturePacket.matchedEntries,
-      actionElementalMatches: actionPacket.matchedEntries,
       attackSources: attackEffects.logs,
       defendSources: defendEffects.logs,
       detailLogs: detailLogs,

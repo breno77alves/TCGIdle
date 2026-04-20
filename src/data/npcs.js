@@ -1,4 +1,8 @@
 (function registerNpcs(global) {
+  function roundToFive(value) {
+    return Math.round(value / 5) * 5;
+  }
+
   function starterStats(baseId) {
     const starterDeck = (global.TCGIdleData && global.TCGIdleData.starterDeck) || [];
     const match = starterDeck.find((entry) => entry.baseId === baseId);
@@ -8,11 +12,11 @@
   function scaleStats(baseId, multiplier, flatEnergy) {
     const base = starterStats(baseId);
     return {
-      courage: Math.round(base.courage * multiplier),
-      power: Math.round(base.power * multiplier),
-      wisdom: Math.round(base.wisdom * multiplier),
-      speed: Math.round(base.speed * multiplier),
-      energy: Math.round(base.energy * multiplier) + (flatEnergy || 0),
+      courage: roundToFive(base.courage * multiplier),
+      power: roundToFive(base.power * multiplier),
+      wisdom: roundToFive(base.wisdom * multiplier),
+      speed: roundToFive(base.speed * multiplier),
+      energy: roundToFive(base.energy * multiplier) + (flatEnergy || 0),
     };
   }
 
@@ -32,7 +36,7 @@
       zone: "limiar-de-aurin",
       difficulty: 1,
       special: false,
-      deck: buildDeck(["belmon", "hirum", "kirr", "samish", "belmon", "kirr"], 0.9, -4),
+      deck: buildDeck(["belmon", "hirum", "kirr", "samish", "belmon", "kirr"], 0.9, -5),
       rewards: {
         essence: 2,
       },
@@ -58,7 +62,7 @@
       zone: "passagem-de-ynmar",
       difficulty: 2,
       special: false,
-      deck: buildDeck(["hirum", "kirr", "samish", "hirum", "kirr", "belmon"], 1.1, 8),
+      deck: buildDeck(["hirum", "kirr", "samish", "hirum", "kirr", "belmon"], 1.1, 10),
       rewards: {
         essence: 5,
       },
@@ -71,7 +75,7 @@
       zone: "praia-de-mifnar",
       difficulty: 2,
       special: false,
-      deck: buildDeck(["samish", "ygar", "belmon", "samish", "grimodari", "hirum"], 1.14, 10),
+      deck: buildDeck(["samish", "ygar", "belmon", "samish", "grimodari", "hirum"], 1.15, 10),
       rewards: {
         essence: 5,
       },
@@ -84,7 +88,7 @@
       zone: "colonia-de-reinos",
       difficulty: 3,
       special: false,
-      deck: buildDeck(["grimodari", "ygar", "belmon", "grimodari", "samish", "kirr"], 1.24, 14),
+      deck: buildDeck(["grimodari", "ygar", "belmon", "grimodari", "samish", "kirr"], 1.25, 15),
       rewards: {
         essence: 8,
       },
@@ -97,7 +101,7 @@
       zone: "profundeza-do-cosmos",
       difficulty: 4,
       special: false,
-      deck: buildDeck(["grimodari", "ygar", "kirr", "samish", "belmon", "hirum"], 1.34, 18),
+      deck: buildDeck(["grimodari", "ygar", "kirr", "samish", "belmon", "hirum"], 1.35, 20),
       rewards: {
         essence: 11,
       },
@@ -110,7 +114,7 @@
       zone: "limiar-de-aurin",
       difficulty: 1,
       special: true,
-      deck: buildDeck(["belmon", "kirr", "hirum", "samish", "belmon", "kirr"], 1.06, 6),
+      deck: buildDeck(["belmon", "kirr", "hirum", "samish", "belmon", "kirr"], 1.05, 5),
       rewards: {
         essence: 6,
         rewardPool: [
@@ -127,7 +131,7 @@
       zone: "praia-de-mifnar",
       difficulty: 2,
       special: true,
-      deck: buildDeck(["samish", "hirum", "kirr", "ygar", "samish", "belmon"], 1.2, 12),
+      deck: buildDeck(["samish", "hirum", "kirr", "ygar", "samish", "belmon"], 1.2, 10),
       rewards: {
         essence: 9,
         rewardPool: [
@@ -144,7 +148,7 @@
       zone: "colonia-de-reinos",
       difficulty: 3,
       special: true,
-      deck: buildDeck(["grimodari", "ygar", "belmon", "grimodari", "samish", "ygar"], 1.3, 18),
+      deck: buildDeck(["grimodari", "ygar", "belmon", "grimodari", "samish", "ygar"], 1.3, 20),
       rewards: {
         essence: 13,
         rewardPool: [
@@ -161,7 +165,7 @@
       zone: "profundeza-do-cosmos",
       difficulty: 4,
       special: true,
-      deck: buildDeck(["grimodari", "ygar", "kirr", "samish", "belmon", "hirum"], 1.42, 22),
+      deck: buildDeck(["grimodari", "ygar", "kirr", "samish", "belmon", "hirum"], 1.4, 20),
       rewards: {
         essence: 18,
         rewardPool: [

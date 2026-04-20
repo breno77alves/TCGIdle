@@ -6,7 +6,7 @@
     locations: { title: "Locais", eyebrow: "Terrenos", size: 6, description: "Secao geografica do deck. Locais ocupam espacos proprios e nao controlam expedicoes." },
     actions: { title: "Acoes", eyebrow: "Fluxo automatico", size: 20, description: "Cartas taticas que representam o repertorio usado pelas criaturas na arena." },
     spells: { title: "Magias", eyebrow: "Itens ativos", size: 6, description: "Ferramentas do duelista para intervencoes ativas durante a batalha." },
-    equipment: { title: "Equipamentos", eyebrow: "Arsenal", size: 6, description: "Um slot de equipamento por criatura para ampliar funcao, checks e resiliencia." },
+    equipment: { title: "Equipamento", eyebrow: "Vinculo", size: 6, description: "Cada criatura pode receber um equipamento proprio." },
   };
 
   function openPicker(section, slotIndex, ctx) {
@@ -143,6 +143,55 @@
     return token;
   }
 
+  function renderEquipmentAttachment(doc, state, slotIndex, ctx) {
+    const creatureSlot = global.TCGIdleDeck.getCreatureSlot(state, slotIndex);
+    const equipmentCard = creatureSlot.equipmentId ? global.TCGIdleDeck.findCard(state, creatureSlot.equipmentId) : null;
+    const wrap = doc.createElement("div");
+    wrap.className = "deck-equipment-attachment";
+
+    const label = doc.createElement("span");
+    label.className = "deck-equipment-label";
+    label.textContent = equipmentCard ? "Equipado: " + getCardTitle(equipmentCard) : "Sem equipamento";
+    wrap.appendChild(label);
+
+    if (equipmentCard) {
+      const effect = renderDeckEffectSummary(doc, equipmentCard);
+      if (effect) {
+        effect.classList.add("deck-equipment-effect");
+        wrap.appendChild(effect);
+      }
+    }
+
+    const controls = doc.createElement("div");
+    controls.className = "deck-equipment-actions";
+
+    const assign = doc.createElement("button");
+    assign.type = "button";
+    assign.className = "mini-action";
+    assign.textContent = equipmentCard ? "Trocar equipamento" : "Equipar";
+    assign.disabled = !creatureSlot.instanceId;
+    assign.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openPicker("equipment", slotIndex, ctx);
+    });
+    controls.appendChild(assign);
+
+    if (equipmentCard) {
+      const clear = doc.createElement("button");
+      clear.type = "button";
+      clear.className = "mini-action mini-action-danger";
+      clear.textContent = "Remover";
+      clear.addEventListener("click", (event) => {
+        event.stopPropagation();
+        ctx.onClearDeckCard("equipment", slotIndex);
+      });
+      controls.appendChild(clear);
+    }
+
+    wrap.appendChild(controls);
+    return wrap;
+  }
+
   function getSubtypeLabel(card) {
     if (!card) return "";
     if (card.cardType === "creature") {
@@ -224,12 +273,13 @@
           '<span class="slot-tribe">' + getCardSubtitle(card) + "</span>" +
           (creatureSlot ? '<span class="slot-lane-badge" data-lane="' + creatureSlot.lane + '">' + (creatureSlot.lane === "backline" ? "Backline" : "Frontline") + "</span>" : "");
         if (card.cardType === "creature" || card.cardType === "action") {
-          copy.appendChild(renderDeckDamageSummary(ctx.doc, card, { limit: 4 }));
+          copy.appendChild(renderDeckDamageSummary(ctx.doc, card, { limit: 5 }));
         }
         if (card.cardType === "creature") {
           copy.appendChild(renderSlotStatsNode(ctx.doc, card));
           const token = renderDeckTokenSummary(ctx.doc, card);
           if (token) copy.appendChild(token);
+          copy.appendChild(renderEquipmentAttachment(ctx.doc, state, index, ctx));
         } else {
           const effect = renderDeckEffectSummary(ctx.doc, card);
           if (effect) copy.appendChild(effect);
@@ -442,7 +492,6 @@
     renderSection(root, state, ctx, "locations");
     renderSection(root, state, ctx, "actions");
     renderSection(root, state, ctx, "spells");
-    renderSection(root, state, ctx, "equipment");
 
     if (pickerState.open) {
       root.appendChild(renderPicker(state, ctx));
