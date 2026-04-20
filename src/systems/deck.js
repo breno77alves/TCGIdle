@@ -4,14 +4,26 @@
     locations: { cardType: "location", size: 6, maxCopiesByBaseId: 6 },
     actions: { cardType: "action", size: 20, maxCopiesByBaseId: 4 },
     spells: { cardType: "spell", size: 6, maxCopiesByBaseId: 2 },
+    equipment: { cardType: "equipment", size: 6, maxCopiesByBaseId: 1 },
   };
 
   function findCard(state, instanceId) {
     return state.collection.cards.find((card) => card.instanceId === instanceId) || null;
   }
 
+  function getCreatureSlots(state) {
+    return (state.deck && state.deck.creatureSlots) || [];
+  }
+
   function getSection(state, sectionName) {
+    if (sectionName === "creatures") {
+      return getCreatureSlots(state).map((slot) => slot && slot.instanceId ? slot.instanceId : null);
+    }
     return (state.deck.sections && state.deck.sections[sectionName]) || [];
+  }
+
+  function getCreatureSlot(state, slotIndex) {
+    return getCreatureSlots(state)[slotIndex] || { instanceId: null, lane: slotIndex < 3 ? "frontline" : "backline" };
   }
 
   function getCardsByType(state, cardType) {
@@ -58,13 +70,39 @@
   function setCardInSection(state, sectionName, slotIndex, instanceId) {
     const check = canPlaceInSection(state, sectionName, instanceId, slotIndex);
     if (!check.ok) return check;
+    if (sectionName === "creatures") {
+      const current = getCreatureSlot(state, slotIndex);
+      state.deck.creatureSlots[slotIndex] = {
+        instanceId: instanceId,
+        lane: current.lane === "backline" ? "backline" : "frontline",
+      };
+      return { ok: true };
+    }
     state.deck.sections[sectionName][slotIndex] = instanceId;
     return { ok: true };
   }
 
   function clearSectionSlot(state, sectionName, slotIndex) {
     if (!SECTION_CONFIG[sectionName]) return { ok: false, reason: "Secao desconhecida." };
+    if (sectionName === "creatures") {
+      const current = getCreatureSlot(state, slotIndex);
+      state.deck.creatureSlots[slotIndex] = {
+        instanceId: null,
+        lane: current.lane === "backline" ? "backline" : "frontline",
+      };
+      return { ok: true };
+    }
     state.deck.sections[sectionName][slotIndex] = null;
+    return { ok: true };
+  }
+
+  function setCreatureLane(state, slotIndex, lane) {
+    const nextLane = lane === "backline" ? "backline" : "frontline";
+    const current = getCreatureSlot(state, slotIndex);
+    state.deck.creatureSlots[slotIndex] = {
+      instanceId: current.instanceId || null,
+      lane: nextLane,
+    };
     return { ok: true };
   }
 
@@ -80,11 +118,14 @@
     SECTION_CONFIG: SECTION_CONFIG,
     findCard: findCard,
     getSection: getSection,
+    getCreatureSlots: getCreatureSlots,
+    getCreatureSlot: getCreatureSlot,
     getCardsByType: getCardsByType,
     countCopiesInSection: countCopiesInSection,
     canPlaceInSection: canPlaceInSection,
     setCardInSection: setCardInSection,
     clearSectionSlot: clearSectionSlot,
+    setCreatureLane: setCreatureLane,
     hasLocationCard: hasLocationCard,
     isDeckReady: isDeckReady,
   };

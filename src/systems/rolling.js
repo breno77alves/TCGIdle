@@ -81,6 +81,19 @@
     };
   }
 
+  function createEquipmentCard(baseId, source, options) {
+    options = options || {};
+    return {
+      instanceId: options.instanceId || makeInstanceId(baseId),
+      cardType: "equipment",
+      baseId: baseId,
+      stats: null,
+      rolledAt: options.rolledAt || new Date().toISOString(),
+      source: source || "expedition",
+      seen: Boolean(options.seen),
+    };
+  }
+
   function rollCard(baseId, source) {
     const data = global.TCGIdleData;
     if (!data) {
@@ -134,6 +147,10 @@
       const spell = data.getSpell(card.baseId);
       return spell ? "Magia " + spell.role : "Magia";
     }
+    if (card.cardType === "equipment") {
+      const equipment = data.getEquipment(card.baseId);
+      return equipment ? "Equipamento " + equipment.role : "Equipamento";
+    }
 
     const base = data.getCreature(card.baseId);
     if (!base) {
@@ -168,6 +185,7 @@
     createLocationCard: createLocationCard,
     createActionCard: createActionCard,
     createSpellCard: createSpellCard,
+    createEquipmentCard: createEquipmentCard,
     rollCard: rollCard,
     rollEliteCard: rollEliteCard,
     rollQualityLabel: rollQualityLabel,

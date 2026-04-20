@@ -51,6 +51,14 @@
         accent: "#8f9af4",
       };
     }
+    if (group.cardType === "equipment") {
+      const equipment = data.getEquipment(group.baseId);
+      return {
+        title: equipment ? equipment.name : group.baseId,
+        subtitle: equipment ? equipment.tagline : "",
+        accent: "#bcbcbc",
+      };
+    }
     const creature = data.getCreature(group.baseId);
     const tribe = creature ? data.getTribe(creature.tribe) : null;
     return {
@@ -152,6 +160,7 @@
     const locationGroups = groups.filter((group) => group.cardType === "location");
     const actionGroups = groups.filter((group) => group.cardType === "action");
     const spellGroups = groups.filter((group) => group.cardType === "spell");
+    const equipmentGroups = groups.filter((group) => group.cardType === "equipment");
 
     const summary = ctx.doc.createElement("header");
     summary.className = "archive-summary";
@@ -165,6 +174,7 @@
     renderGroupShelf(root, ctx, "Locais registrados", "Mapa", "Locais conhecidos pelo duelista e suas rotas de expansao.", locationGroups, "location");
     renderGroupShelf(root, ctx, "Acoes registradas", "Tatica", "Cartas de acao que compoem a malha automatica do duelo.", actionGroups, "action");
     renderGroupShelf(root, ctx, "Magias registradas", "Itens ativos", "Ferramentas taticas do jogador para uso manual na arena.", spellGroups, "spell");
+    renderGroupShelf(root, ctx, "Equipamentos registrados", "Arsenal", "Ferramentas persistentes que alteram o comportamento de combate das criaturas.", equipmentGroups, "equipment");
 
     renderDetail(root, ctx, groups);
   }

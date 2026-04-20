@@ -53,6 +53,7 @@
       onClaimReward: handleClaimReward,
       onAssignDeckCard: handleAssignDeckCard,
       onClearDeckCard: handleClearDeckCard,
+      onSetCreatureLane: handleSetCreatureLane,
       onInspectCard: handleInspectCard,
       onStartDuel: handleStartDuel,
       requestRender: requestRender,
@@ -129,6 +130,12 @@
   function handleClearDeckCard(sectionName, slotIndex) {
     global.TCGIdleDeck.clearSectionSlot(state, sectionName, slotIndex);
     persist("Espaco removido de " + sectionName);
+    render();
+  }
+
+  function handleSetCreatureLane(slotIndex, lane) {
+    global.TCGIdleDeck.setCreatureLane(state, slotIndex, lane);
+    persist("Linha da criatura " + (slotIndex + 1) + " alterada para " + (lane === "backline" ? "retaguarda" : "frente"));
     render();
   }
 

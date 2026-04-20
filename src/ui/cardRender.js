@@ -114,6 +114,21 @@
         meta: spell,
       };
     }
+    if (card.cardType === "equipment") {
+      const equipment = data.getEquipment(card.baseId);
+      return {
+        kind: "equipment",
+        title: equipment ? equipment.name : card.baseId,
+        subtitle: equipment ? equipment.description : "",
+        portrait: equipment ? equipment.portrait : "",
+        badge: "Equipamento",
+        label: equipment ? equipment.role : "arsenal",
+        tribe: null,
+        element: "equipamento",
+        ranges: null,
+        meta: equipment,
+      };
+    }
 
     const creature = data.getCreature(card.baseId);
     const tribe = creature ? data.getTribe(creature.tribe) : null;
@@ -140,7 +155,7 @@
         '<span class="location-chip">Duracao: ' + Math.round(info.meta.durationMs / 1000) + "s</span>";
       return wrap;
     }
-    if ((card.cardType === "action" || card.cardType === "spell") && info.meta) {
+    if ((card.cardType === "action" || card.cardType === "spell" || card.cardType === "equipment") && info.meta) {
       wrap.innerHTML =
         '<span class="location-chip">' + info.badge + "</span>" +
         '<span class="location-chip">' + info.label + "</span>";

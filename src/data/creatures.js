@@ -5,7 +5,9 @@
       name: "Belmon",
       tribe: "solari",
       element: "fire",
+      combatTags: ["frontline", "guardian"],
       portrait: "Arte/ArtWork/Champion/Belmon.png",
+      passives: [{ trigger: "onDefend", lane: "frontline", flatMitigation: 3, source: "Juramento Inquebravel" }],
       tagline: "Cavaleiro solar de juramento inquebrável.",
       ranges: {
         courage: [85, 125],
@@ -20,7 +22,9 @@
       name: "Hirum",
       tribe: "solari",
       element: "air",
+      combatTags: ["frontline", "skirmisher"],
       portrait: "Arte/ArtWork/Champion/Hirum.png",
+      passives: [{ trigger: "onAttack", statScale: [{ stat: "speed", ratio: 0.05 }], source: "Passo do Sentinela" }],
       tagline: "Sentinela das colinas ao amanhecer.",
       ranges: {
         courage: [80, 120],
@@ -35,7 +39,9 @@
       name: "Grimodari",
       tribe: "umbrae",
       element: "earth",
+      combatTags: ["frontline", "bruiser"],
       portrait: "Arte/ArtWork/Champion/Grimodari.png",
+      passives: [{ trigger: "onAttack", statScale: [{ stat: "power", ratio: 0.06 }], source: "Pressao de Aco" }],
       tagline: "Colosso de ferro negro forjado em câmaras profundas.",
       ranges: {
         courage: [45, 70],
@@ -50,7 +56,9 @@
       name: "Ygar",
       tribe: "umbrae",
       element: "fire",
+      combatTags: ["frontline", "berserker"],
       portrait: "Arte/ArtWork/Champion/Ygar.png",
+      passives: [{ trigger: "onAttack", flatDamage: 2, source: "Fornalha Interna" }],
       tagline: "Bruto que canaliza fornalhas subterrâneas.",
       ranges: {
         courage: [50, 75],
@@ -65,7 +73,9 @@
       name: "Kirr",
       tribe: "nomads",
       element: "air",
+      combatTags: ["backline", "assassin"],
       portrait: "Arte/ArtWork/Champion/Kirr.png",
+      passives: [{ trigger: "onAttack", lane: "backline", statScale: [{ stat: "speed", ratio: 0.07 }], source: "Mapa de Vento" }],
       tagline: "Batedor que lê o vento como mapa.",
       ranges: {
         courage: [55, 80],
@@ -80,7 +90,9 @@
       name: "Samish",
       tribe: "hivekin",
       element: "water",
+      combatTags: ["backline", "support"],
       portrait: "Arte/ArtWork/Champion/Samish.png",
+      passives: [{ trigger: "onAttack", lane: "backline", statScale: [{ stat: "wisdom", ratio: 0.08 }], source: "Memoria Coletiva" }],
       tagline: "Arquivista da colmeia, memória coletiva da tribo.",
       ranges: {
         courage: [40, 65],

@@ -148,6 +148,7 @@
 .card-element[data-element="mapa"] { color: #89d2c0; border-color: #89d2c0; }
 .card-element[data-element="acao"] { color: #d66a52; border-color: #d66a52; }
 .card-element[data-element="magia"] { color: #9ca6ff; border-color: #9ca6ff; }
+.card-element[data-element="equipamento"] { color: #d8d6d0; border-color: #d8d6d0; }
 
 .card-stats {
   margin-top: 4px;

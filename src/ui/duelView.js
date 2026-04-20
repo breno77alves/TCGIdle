@@ -40,9 +40,9 @@
     const board = ctx.doc.createElement("section");
     board.className = "duel-board";
     board.append(
-      renderQueueColumn(ctx.doc, "Voce", ctxDuel.playerQueue, ctxDuel.activePlayer, "player"),
+      renderQueueColumn(ctx.doc, "Voce", ctxDuel.playerSide, ctxDuel.currentEngagement, "player"),
       renderClash(ctx.doc, ctxDuel, npc),
-      renderQueueColumn(ctx.doc, npc ? npc.name : "Oponente", ctxDuel.enemyQueue, ctxDuel.activeEnemy, "enemy")
+      renderQueueColumn(ctx.doc, npc ? npc.name : "Oponente", ctxDuel.enemySide, ctxDuel.currentEngagement, "enemy")
     );
     root.appendChild(board);
 
@@ -51,7 +51,7 @@
     log.innerHTML = '<header class="duel-log-header"><p class="eyebrow">Relato</p><h4>Tick ' + ctxDuel.tick + "</h4></header>";
     const logList = ctx.doc.createElement("ol");
     logList.className = "duel-log-list";
-    ctxDuel.log.slice(-14).forEach((entry) => {
+    ctxDuel.log.slice(-16).forEach((entry) => {
       const li = ctx.doc.createElement("li");
       li.dataset.kind = entry.kind;
       if (entry.attackerSide) li.dataset.side = entry.attackerSide;
@@ -69,7 +69,7 @@
     const header = ctx.doc.createElement("header");
     header.className = "duel-header";
     header.innerHTML =
-      '<div><p class="eyebrow">Arena</p><h3>Fila de duelos</h3><p class="flavor">Venca series da mesma dificuldade para abrir provas especiais que concedem scans super raros.</p></div>' +
+      '<div><p class="eyebrow">Arena</p><h3>Fila de duelos</h3><p class="flavor">A linha de frente segura o primeiro impacto. A retaguarda entra quando a vanguarda cai.</p></div>' +
       '<div class="duel-scoreboard"><span>Vitorias</span><strong>' + state.progress.duelsWon + "</strong>" +
       "<span>Derrotas</span><strong>" + state.progress.duelsLost + "</strong></div>";
     wrapper.appendChild(header);
@@ -136,7 +136,7 @@
     return wrapper;
   }
 
-  function renderQueueColumn(doc, title, queue, activeIndex, side) {
+  function renderQueueColumn(doc, title, sideState, engagement, side) {
     const col = doc.createElement("div");
     col.className = "duel-column";
     col.dataset.side = side;
@@ -144,19 +144,23 @@
     const list = doc.createElement("ol");
     list.className = "duel-queue";
 
-    queue.forEach((fighter, index) => {
+    sideState.fighters.forEach((fighter) => {
       const tribe = global.TCGIdleData.getTribe(fighter.tribe);
       const pct = Math.max(0, fighter.hp / fighter.hpMax);
       const li = doc.createElement("li");
       li.className = "duel-fighter";
-      if (index === activeIndex && fighter.hp > 0) li.dataset.active = "true";
+      const engagedId = side === "player" ? engagement && engagement.playerId : engagement && engagement.enemyId;
+      if (fighter.instanceId === engagedId && fighter.hp > 0) li.dataset.active = "true";
       if (fighter.hp <= 0) li.dataset.down = "true";
+      li.dataset.lane = fighter.lane;
       if (tribe) {
         li.style.setProperty("--tribe-accent", tribe.accent);
         li.style.setProperty("--tribe-soft", tribe.accentSoft);
       }
       li.innerHTML =
         '<div class="fighter-line"><strong>' + fighter.name + "</strong><span>" + (tribe ? tribe.name : "") + "</span></div>" +
+        '<div class="fighter-meta"><span class="fighter-lane">' + (fighter.lane === "backline" ? "Backline" : "Frontline") + '</span>' +
+        (fighter.equipmentBase ? '<span class="fighter-equipment">' + fighter.equipmentBase.name + "</span>" : "") + "</div>" +
         '<div class="hp-track"><div class="hp-fill" style="width:' + (pct * 100).toFixed(1) + '%"></div></div>' +
         '<span class="hp-value">Energia ' + fighter.hp + " / " + fighter.hpMax + "</span>";
       list.appendChild(li);
@@ -168,12 +172,14 @@
   function renderClash(doc, ctxDuel, npc) {
     const el = doc.createElement("div");
     el.className = "duel-clash";
-    const attacker = ctxDuel.playerQueue[ctxDuel.activePlayer];
-    const defender = ctxDuel.enemyQueue[ctxDuel.activeEnemy];
+    const engagement = ctxDuel.currentEngagement || {};
+    const attacker = ctxDuel.playerSide.fighters.find((fighter) => fighter.instanceId === engagement.playerId);
+    const defender = ctxDuel.enemySide.fighters.find((fighter) => fighter.instanceId === engagement.enemyId);
     el.innerHTML =
       '<p class="eyebrow">Tick ' + ctxDuel.tick + "</p>" +
       "<h4>" + (attacker ? attacker.name : "—") + " × " + (defender ? defender.name : "—") + "</h4>" +
-      '<p class="flavor">Contra ' + (npc ? npc.name : "oponente") + "</p>";
+      '<p class="flavor">Contra ' + (npc ? npc.name : "oponente") + "</p>" +
+      '<div class="clash-actions"><span>' + (engagement.playerAction || "Aguardando") + "</span><span>" + (engagement.enemyAction || "Aguardando") + "</span></div>";
     return el;
   }
 

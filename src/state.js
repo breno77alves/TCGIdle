@@ -1,6 +1,6 @@
 (function bootstrapState(global) {
   const STORAGE_KEY = "tcg-idle-save";
-  const SAVE_VERSION = 4;
+  const SAVE_VERSION = 5;
   const STARTER_LOCATION_COPIES = 6;
 
   function makeInstance(prefix, index) {
@@ -43,7 +43,8 @@
     const locationCards = starterLocations.map((baseId, index) => createStarterCard(baseId, "location", index));
     const actionCards = (data.starterActionDeck || []).map((baseId, index) => createStarterCard(baseId, "action", index));
     const spellCards = (data.starterSpellDeck || []).map((baseId, index) => createStarterCard(baseId, "spell", index));
-    const cards = creatureCards.concat(locationCards, actionCards, spellCards);
+    const equipmentCards = (data.starterEquipmentDeck || []).map((baseId, index) => createStarterCard(baseId, "equipment", index));
+    const cards = creatureCards.concat(locationCards, actionCards, spellCards, equipmentCards);
 
     return {
       saveVersion: SAVE_VERSION,
@@ -61,11 +62,15 @@
         cards: cards,
       },
       deck: {
+        creatureSlots: creatureCards.slice(0, 6).map((card, index) => ({
+          instanceId: card.instanceId,
+          lane: index < 3 ? "frontline" : "backline",
+        })),
         sections: {
-          creatures: creatureCards.slice(0, 6).map((card) => card.instanceId),
           locations: locationCards.slice(0, 6).map((card) => card.instanceId),
           actions: actionCards.slice(0, 20).map((card) => card.instanceId),
           spells: spellCards.slice(0, 6).map((card) => card.instanceId),
+          equipment: equipmentCards.slice(0, 6).map((card) => card.instanceId),
         },
       },
       expeditions: {
@@ -105,7 +110,7 @@
     if (!candidate || typeof candidate !== "object") return null;
     if (typeof candidate.baseId !== "string" || typeof candidate.instanceId !== "string") return null;
 
-    const allowedTypes = new Set(["creature", "location", "action", "spell"]);
+    const allowedTypes = new Set(["creature", "location", "action", "spell", "equipment"]);
     const cardType = allowedTypes.has(candidate.cardType) ? candidate.cardType : "creature";
 
     return {
@@ -140,7 +145,7 @@
   }
 
   function ensureStarterTypes(cards, defaults) {
-    const needed = ["location", "action", "spell"];
+    const needed = ["location", "action", "spell", "equipment"];
     let next = cards.slice();
     needed.forEach((cardType) => {
       if (!next.some((card) => card.cardType === cardType)) {
@@ -160,6 +165,24 @@
     return next;
   }
 
+  function sanitizeCreatureSlots(candidate, validIds, fallback) {
+    const source = Array.isArray(candidate) && candidate.length ? candidate : (Array.isArray(fallback) ? fallback : []);
+    const next = [];
+    for (let i = 0; i < 6; i += 1) {
+      const entry = source[i];
+      if (entry && typeof entry === "object") {
+        next.push({
+          instanceId: typeof entry.instanceId === "string" && validIds.has(entry.instanceId) ? entry.instanceId : null,
+          lane: entry.lane === "backline" ? "backline" : "frontline",
+        });
+        continue;
+      }
+      const legacyId = typeof entry === "string" && validIds.has(entry) ? entry : null;
+      next.push({ instanceId: legacyId, lane: i < 3 ? "frontline" : "backline" });
+    }
+    return next;
+  }
+
   function sanitizeDeck(candidate, cards, defaults) {
     const safe = candidate && typeof candidate === "object" ? candidate : {};
     const sections = safe.sections && typeof safe.sections === "object" ? safe.sections : {};
@@ -169,14 +192,16 @@
       location: new Set(cards.filter((card) => card.cardType === "location").map((card) => card.instanceId)),
       action: new Set(cards.filter((card) => card.cardType === "action").map((card) => card.instanceId)),
       spell: new Set(cards.filter((card) => card.cardType === "spell").map((card) => card.instanceId)),
+      equipment: new Set(cards.filter((card) => card.cardType === "equipment").map((card) => card.instanceId)),
     };
 
     return {
+      creatureSlots: sanitizeCreatureSlots(safe.creatureSlots || (sections.creatures || safe.slots), validByType.creature, defaults.deck.creatureSlots),
       sections: {
-        creatures: sanitizeSection(sections.creatures || safe.slots, validByType.creature, defaults.deck.sections.creatures, 6),
         locations: sanitizeSection(sections.locations || (safe.locationSlot ? [safe.locationSlot] : null), validByType.location, defaults.deck.sections.locations, 6),
         actions: sanitizeSection(sections.actions, validByType.action, defaults.deck.sections.actions, 20),
         spells: sanitizeSection(sections.spells, validByType.spell, defaults.deck.sections.spells, 6),
+        equipment: sanitizeSection(sections.equipment, validByType.equipment, defaults.deck.sections.equipment, 6),
       },
     };
   }
@@ -253,6 +278,10 @@
       migrated.expeditions = Object.assign({}, fresh.expeditions, safe.expeditions || {});
       migrated.duel = Object.assign({}, fresh.duel, safe.duel || {});
       migrated.progress = Object.assign({}, fresh.progress, safe.progress || {});
+    }
+
+    if (version < 5) {
+      migrated.meta.lastAction = "Save migrado para v5 com formacao por linha e arsenal de combate expandido";
     }
 
     return migrated;

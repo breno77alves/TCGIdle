@@ -229,6 +229,14 @@
   box-shadow: 0 0 0 1px var(--tribe-accent) inset;
 }
 
+.duel-fighter[data-lane="frontline"] {
+  box-shadow: 0 0 0 1px rgba(240, 187, 109, 0.08) inset;
+}
+
+.duel-fighter[data-lane="backline"] {
+  box-shadow: 0 0 0 1px rgba(140, 186, 255, 0.08) inset;
+}
+
 .duel-fighter[data-down="true"] {
   opacity: 0.45;
   filter: grayscale(0.7);
@@ -254,6 +262,39 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--tribe-accent);
+}
+
+.fighter-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fighter-lane,
+.fighter-equipment,
+.clash-actions span {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 231, 204, 0.16);
+  color: rgba(242, 231, 204, 0.7);
+}
+
+.fighter-lane {
+  color: #f0bb6d;
+  border-color: rgba(240, 187, 109, 0.34);
+}
+
+.duel-fighter[data-lane="backline"] .fighter-lane {
+  color: #8cbaff;
+  border-color: rgba(140, 186, 255, 0.34);
+}
+
+.fighter-equipment {
+  color: var(--bone-soft);
 }
 
 .hp-track {
@@ -309,6 +350,12 @@
   font-size: 1.1rem;
   color: var(--bone);
   letter-spacing: 0.18em;
+}
+
+.clash-actions {
+  display: grid;
+  gap: 8px;
+  width: 100%;
 }
 
 .duel-log {

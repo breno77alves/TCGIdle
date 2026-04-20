@@ -2,10 +2,11 @@
   let pickerState = { open: false, section: null, slotIndex: null, query: "", subtype: "all", availability: "all" };
 
   const SECTION_META = {
-    creatures: { title: "Criaturas", eyebrow: "Linha titular", size: 6, description: "Base do duelo automatico. Maximo de 2 copias por especie." },
+    creatures: { title: "Criaturas", eyebrow: "Linha titular", size: 6, description: "Cada criatura pode ser posicionada na linha de frente ou retaguarda." },
     locations: { title: "Locais", eyebrow: "Terrenos", size: 6, description: "Secao geografica do deck. Locais ocupam espacos proprios e nao controlam expedicoes." },
     actions: { title: "Acoes", eyebrow: "Fluxo automatico", size: 20, description: "Cartas taticas que representam o repertorio usado pelas criaturas na arena." },
     spells: { title: "Magias", eyebrow: "Itens ativos", size: 6, description: "Ferramentas do duelista para intervencoes ativas durante a batalha." },
+    equipment: { title: "Equipamentos", eyebrow: "Arsenal", size: 6, description: "Um slot de equipamento por criatura para ampliar funcao, checks e resiliencia." },
   };
 
   function openPicker(section, slotIndex, ctx) {
@@ -40,6 +41,10 @@
       const base = global.TCGIdleData.getAction(card.baseId);
       return base ? base.portrait : "";
     }
+    if (card.cardType === "equipment") {
+      const base = global.TCGIdleData.getEquipment(card.baseId);
+      return base ? base.portrait : "";
+    }
     const spell = global.TCGIdleData.getSpell(card.baseId);
     return spell ? spell.portrait : "";
   }
@@ -56,6 +61,10 @@
     }
     if (card.cardType === "action") {
       const base = global.TCGIdleData.getAction(card.baseId);
+      return base ? base.name : card.baseId;
+    }
+    if (card.cardType === "equipment") {
+      const base = global.TCGIdleData.getEquipment(card.baseId);
       return base ? base.name : card.baseId;
     }
     const spell = global.TCGIdleData.getSpell(card.baseId);
@@ -76,6 +85,10 @@
     if (card.cardType === "action") {
       const base = global.TCGIdleData.getAction(card.baseId);
       return base ? base.role : "Acao";
+    }
+    if (card.cardType === "equipment") {
+      const base = global.TCGIdleData.getEquipment(card.baseId);
+      return base ? base.role : "Equipamento";
     }
     const spell = global.TCGIdleData.getSpell(card.baseId);
     return spell ? spell.role : "Magia";
@@ -106,6 +119,10 @@
     if (card.cardType === "action") {
       const base = global.TCGIdleData.getAction(card.baseId);
       return base ? base.role : "Acao";
+    }
+    if (card.cardType === "equipment") {
+      const base = global.TCGIdleData.getEquipment(card.baseId);
+      return base ? base.role : "Equipamento";
     }
     const spell = global.TCGIdleData.getSpell(card.baseId);
     return spell ? spell.role : "Magia";
@@ -152,6 +169,7 @@
     board.className = "deck-board deck-board-" + sectionName;
     sectionCards.forEach((instanceId, index) => {
       const card = instanceId ? global.TCGIdleDeck.findCard(state, instanceId) : null;
+      const creatureSlot = sectionName === "creatures" ? global.TCGIdleDeck.getCreatureSlot(state, index) : null;
       const slot = ctx.doc.createElement("button");
       slot.type = "button";
       slot.className = "deck-slot";
@@ -166,13 +184,33 @@
           '<span class="slot-number">' + meta.title + " " + (index + 1) + "</span>" +
           "<strong>" + getCardTitle(card) + "</strong>" +
           '<span class="slot-tribe">' + getCardSubtitle(card) + "</span>" +
+          (creatureSlot ? '<span class="slot-lane-badge" data-lane="' + creatureSlot.lane + '">' + (creatureSlot.lane === "backline" ? "Backline" : "Frontline") + "</span>" : "") +
           renderSlotStats(card);
         slot.appendChild(copy);
       } else {
         slot.innerHTML =
           '<span class="slot-number">' + meta.title + " " + (index + 1) + "</span>" +
           "<strong>Vazio</strong>" +
-          '<span class="slot-tribe">Toque para designar</span>';
+          '<span class="slot-tribe">Toque para designar</span>' +
+          (creatureSlot ? '<span class="slot-lane-badge" data-lane="' + creatureSlot.lane + '">' + (creatureSlot.lane === "backline" ? "Backline" : "Frontline") + "</span>" : "");
+      }
+
+      if (creatureSlot) {
+        const laneToggle = ctx.doc.createElement("div");
+        laneToggle.className = "lane-toggle";
+        ["frontline", "backline"].forEach((lane) => {
+          const laneButton = ctx.doc.createElement("button");
+          laneButton.type = "button";
+          laneButton.className = "lane-button";
+          if (creatureSlot.lane === lane) laneButton.dataset.active = "true";
+          laneButton.textContent = lane === "frontline" ? "Frontline" : "Backline";
+          laneButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            ctx.onSetCreatureLane(index, lane);
+          });
+          laneToggle.appendChild(laneButton);
+        });
+        slot.appendChild(laneToggle);
       }
 
       slot.addEventListener("click", () => openPicker(sectionName, index, ctx));
@@ -338,6 +376,7 @@
     renderSection(root, state, ctx, "locations");
     renderSection(root, state, ctx, "actions");
     renderSection(root, state, ctx, "spells");
+    renderSection(root, state, ctx, "equipment");
 
     if (pickerState.open) {
       root.appendChild(renderPicker(state, ctx));
