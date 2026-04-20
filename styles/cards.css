@@ -81,9 +81,9 @@
   padding: 18px 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   position: relative;
-  min-height: 340px;
+  min-height: 0;
 }
 
 .card-name {
@@ -95,17 +95,17 @@
 
 .card-layout {
   display: grid;
-  gap: 16px;
-  align-items: stretch;
+  gap: 12px;
+  align-items: start;
 }
 
 .card-layout[data-kind="creature"] {
-  grid-template-columns: 156px minmax(0, 1fr);
+  grid-template-columns: 132px minmax(0, 1fr);
 }
 
 .card-layout[data-kind="action"],
 .card-layout[data-kind="spell"] {
-  grid-template-columns: 156px minmax(0, 1fr);
+  grid-template-columns: 132px minmax(0, 1fr);
 }
 
 .card-layout[data-kind="location"],
@@ -126,15 +126,17 @@
 
 .card-content-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px;
-  gap: 14px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 10px;
+  align-items: start;
 }
 
 .damage-stack {
   display: grid;
-  gap: 8px;
+  gap: 7px;
   width: 100%;
+  align-content: start;
+  grid-auto-rows: min-content;
 }
 
 .damage-stack-compact {
@@ -146,7 +148,7 @@
   justify-content: space-between;
   gap: 8px;
   align-items: center;
-  min-height: 38px;
+  min-height: 0;
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(242, 231, 204, 0.18);
@@ -214,9 +216,9 @@
 }
 
 .card-main-copy {
-  min-height: 100%;
+  min-height: 0;
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   overflow: hidden;
 }
 
@@ -226,16 +228,22 @@
 
 .card-effect-text {
   font-family: var(--font-flavor);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-size: 0.84rem;
+  line-height: 1.45;
   color: rgba(242, 231, 204, 0.82);
   overflow-wrap: anywhere;
   word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .card-stat-column {
   display: grid;
-  gap: 8px;
+  gap: 7px;
+  align-content: start;
+  grid-auto-rows: min-content;
 }
 
 .card-stat-line {
@@ -243,7 +251,7 @@
   justify-content: space-between;
   gap: 8px;
   align-items: center;
-  min-height: 38px;
+  min-height: 0;
   padding: 8px 10px;
   border-radius: 8px;
   background: rgba(242, 231, 204, 0.04);
@@ -286,13 +294,13 @@
 
 .card-token[data-card-type="action"] .card-body,
 .card-token[data-card-type="creature"] .card-body {
-  min-height: 372px;
+  min-height: 248px;
 }
 
 .card-token[data-card-type="spell"] .card-body,
 .card-token[data-card-type="location"] .card-body,
 .card-token[data-card-type="equipment"] .card-body {
-  min-height: 270px;
+  min-height: 210px;
 }
 
 .card-footer-strip {

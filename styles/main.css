@@ -602,7 +602,7 @@ p { margin: 0; }
 }
 
 .catalog-grid {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
 }
 
 .catalog-entry {
