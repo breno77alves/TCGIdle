@@ -83,7 +83,7 @@
   flex-direction: column;
   gap: 14px;
   position: relative;
-  min-height: 290px;
+  min-height: 340px;
 }
 
 .card-name {
@@ -95,17 +95,17 @@
 
 .card-layout {
   display: grid;
-  gap: 12px;
-  align-items: start;
+  gap: 16px;
+  align-items: stretch;
 }
 
 .card-layout[data-kind="creature"] {
-  grid-template-columns: 130px minmax(0, 1.2fr) 110px;
+  grid-template-columns: 156px minmax(0, 1fr);
 }
 
 .card-layout[data-kind="action"],
 .card-layout[data-kind="spell"] {
-  grid-template-columns: 135px minmax(0, 1.35fr);
+  grid-template-columns: 156px minmax(0, 1fr);
 }
 
 .card-layout[data-kind="location"],
@@ -115,13 +115,26 @@
 
 .card-side-panel,
 .card-main-copy,
-.card-stat-column {
+.card-stat-column,
+.card-content-shell {
   min-width: 0;
+}
+
+.card-damage-panel {
+  display: flex;
+}
+
+.card-content-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 14px;
+  align-items: stretch;
 }
 
 .damage-stack {
   display: grid;
   gap: 8px;
+  width: 100%;
 }
 
 .damage-stack-compact {
@@ -133,14 +146,14 @@
   justify-content: space-between;
   gap: 8px;
   align-items: center;
-  min-height: 36px;
-  padding: 7px 9px;
+  min-height: 38px;
+  padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(242, 231, 204, 0.18);
   background: rgba(242, 231, 204, 0.05);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--bone-soft);
 }
@@ -157,8 +170,9 @@
 
 .damage-chip strong {
   color: var(--bone);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   letter-spacing: 0.08em;
+  flex: 0 0 auto;
 }
 
 .damage-chip[data-tone="base"] {
@@ -203,6 +217,7 @@
   min-height: 100%;
   display: flex;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .card-main-copy-wide {
@@ -211,9 +226,11 @@
 
 .card-effect-text {
   font-family: var(--font-flavor);
-  font-size: 0.95rem;
-  line-height: 1.55;
+  font-size: 0.9rem;
+  line-height: 1.6;
   color: rgba(242, 231, 204, 0.82);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .card-stat-column {
@@ -226,13 +243,13 @@
   justify-content: space-between;
   gap: 8px;
   align-items: center;
-  min-height: 36px;
-  padding: 7px 9px;
+  min-height: 38px;
+  padding: 8px 10px;
   border-radius: 8px;
   background: rgba(242, 231, 204, 0.04);
   border: 1px solid rgba(242, 231, 204, 0.12);
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: 0.62rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(242, 231, 204, 0.7);
@@ -240,7 +257,7 @@
 
 .card-stat-line strong {
   color: var(--bone);
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   letter-spacing: 0.06em;
 }
 
@@ -269,13 +286,13 @@
 
 .card-token[data-card-type="action"] .card-body,
 .card-token[data-card-type="creature"] .card-body {
-  min-height: 320px;
+  min-height: 372px;
 }
 
 .card-token[data-card-type="spell"] .card-body,
 .card-token[data-card-type="location"] .card-body,
 .card-token[data-card-type="equipment"] .card-body {
-  min-height: 250px;
+  min-height: 270px;
 }
 
 .card-footer-strip {
@@ -287,6 +304,10 @@
   .card-layout[data-kind="creature"],
   .card-layout[data-kind="action"],
   .card-layout[data-kind="spell"] {
+    grid-template-columns: 1fr;
+  }
+
+  .card-content-shell {
     grid-template-columns: 1fr;
   }
 }

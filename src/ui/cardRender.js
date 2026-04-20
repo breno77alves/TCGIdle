@@ -268,15 +268,19 @@
 
     if (card.cardType === "creature") {
       const left = doc.createElement("aside");
-      left.className = "card-side-panel";
+      left.className = "card-side-panel card-damage-panel";
       left.appendChild(renderDamageStack(doc, model.damageEntries));
+
+      const contentShell = doc.createElement("div");
+      contentShell.className = "card-content-shell";
 
       const center = doc.createElement("div");
       center.className = "card-main-copy";
       center.innerHTML = '<p class="card-effect-text">' + (model.effectText || "Sem efeito adicional.") + "</p>";
 
       const right = renderCompactStats(doc, card);
-      layout.append(left, center, right);
+      contentShell.append(center, right);
+      layout.append(left, contentShell);
       body.appendChild(layout);
 
       const footer = doc.createElement("div");
@@ -285,7 +289,7 @@
       body.appendChild(footer);
     } else if (card.cardType === "action") {
       const left = doc.createElement("aside");
-      left.className = "card-side-panel";
+      left.className = "card-side-panel card-damage-panel";
       left.appendChild(renderDamageStack(doc, model.damageEntries));
 
       const center = doc.createElement("div");
