@@ -1,71 +1,11 @@
 (function registerCardRender(global) {
   const STAT_META = {
-    courage: {
-      label: "Coragem",
-      short: "CR",
-      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.4 4.9 13.8C3 12.1 2 10.3 2 8.3 2 5.4 4.1 3.5 6.8 3.5c1.8 0 3.3.8 4.2 2.2.9-1.4 2.4-2.2 4.2-2.2 2.7 0 4.8 1.9 4.8 4.8 0 2-1 3.8-2.9 5.5L12 20.4Z" fill="currentColor"/></svg>',
-    },
-    power: {
-      label: "Potencia",
-      short: "PO",
-      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 2 5 13h5.3L9.8 22 19 10.9h-5.2L13.2 2Z" fill="currentColor"/></svg>',
-    },
-    wisdom: {
-      label: "Sabedoria",
-      short: "SA",
-      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5C6.8 5 3.1 8.2 1.6 12c1.5 3.8 5.2 7 10.4 7s8.9-3.2 10.4-7C20.9 8.2 17.2 5 12 5Zm0 11.1A4.1 4.1 0 1 1 12 7.9a4.1 4.1 0 0 1 0 8.2Zm0-2.2a1.9 1.9 0 1 0 0-3.8 1.9 1.9 0 0 0 0 3.8Z" fill="currentColor"/></svg>',
-    },
-    speed: {
-      label: "Velocidade",
-      short: "VL",
-      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12.6c2.1-2.6 4.2-3.9 6.3-3.9 2.4 0 3.3 1.6 5.2 1.6 1.3 0 2.8-.7 4.5-2.1v2.6c-1.8 1.5-3.4 2.2-4.9 2.2-2.3 0-3.3-1.6-5.1-1.6-1.5 0-3 .8-4.5 2.4L3 12.6Zm1.5 4.8c1.6-1.4 3.1-2.1 4.6-2.1 1.8 0 2.8 1.5 5.1 1.5 1.5 0 3.1-.7 4.8-2.2V17c-1.7 1.3-3.3 2-4.7 2-2 0-2.9-1.5-5.2-1.5-1.4 0-2.9.7-4.6 2.1v-2.2Z" fill="currentColor"/></svg>',
-    },
-    energy: {
-      label: "Energia",
-      short: "EN",
-      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c2.8 3 5.6 6.1 5.6 10A5.6 5.6 0 1 1 6.4 12.2c0-1.7.7-3.4 1.9-5l1.7 2.3c-.5.9-.8 1.8-.8 2.8a2.8 2.8 0 1 0 5.6 0c0-1.5-.8-3.1-2.8-5.4Z" fill="currentColor"/></svg>',
-    },
+    courage: { label: "Coragem", short: "CR" },
+    power: { label: "Potencia", short: "PO" },
+    wisdom: { label: "Sabedoria", short: "SA" },
+    speed: { label: "Velocidade", short: "VL" },
+    energy: { label: "Energia", short: "EN" },
   };
-
-  function pctInRange(value, band) {
-    if (!Array.isArray(band) || band.length !== 2 || band[1] === band[0]) return 0;
-    const pct = (value - band[0]) / (band[1] - band[0]);
-    return Math.max(0, Math.min(1, pct));
-  }
-
-  function getStatIconMarkup(key) {
-    const meta = STAT_META[key];
-    if (!meta) return '<span class="stat-short">' + key + "</span>";
-    return '<span class="stat-short" title="' + meta.label + '">' + meta.short + "</span>";
-  }
-
-  function statRow(doc, key, value, band) {
-    const row = doc.createElement("div");
-    row.className = "stat-row";
-    row.dataset.stat = key;
-
-    const label = doc.createElement("span");
-    label.className = "stat-label";
-    label.innerHTML = getStatIconMarkup(key) + '<span class="stat-sr">' + ((STAT_META[key] && STAT_META[key].label) || key) + "</span>";
-
-    const valueEl = doc.createElement("span");
-    valueEl.className = "stat-value";
-    valueEl.textContent = String(value);
-
-    const track = doc.createElement("div");
-    track.className = "stat-track";
-    const fill = doc.createElement("div");
-    fill.className = "stat-fill";
-    fill.style.width = (pctInRange(value, band) * 100).toFixed(1) + "%";
-    track.appendChild(fill);
-
-    const range = doc.createElement("span");
-    range.className = "stat-range";
-    range.textContent = Array.isArray(band) ? band[0] + "-" + band[1] : "";
-
-    row.append(label, valueEl, track, range);
-    return row;
-  }
 
   function resolveCardBase(card) {
     const data = global.TCGIdleData;
@@ -74,13 +14,7 @@
       return {
         kind: "location",
         title: location ? location.name : card.baseId,
-        subtitle: location ? location.description : "",
         portrait: location ? location.portrait : "",
-        badge: location ? location.rarityLabel : "Rota",
-        label: "Local",
-        tribe: null,
-        element: "mapa",
-        ranges: null,
         meta: location,
       };
     }
@@ -89,13 +23,7 @@
       return {
         kind: "action",
         title: action ? action.name : card.baseId,
-        subtitle: action ? action.description : "",
         portrait: action ? action.portrait : "",
-        badge: "Acao",
-        label: action ? action.role : "tatico",
-        tribe: null,
-        element: "acao",
-        ranges: null,
         meta: action,
       };
     }
@@ -104,13 +32,7 @@
       return {
         kind: "spell",
         title: spell ? spell.name : card.baseId,
-        subtitle: spell ? spell.description : "",
         portrait: spell ? spell.portrait : "",
-        badge: "Magia",
-        label: spell ? spell.role : "ativo",
-        tribe: null,
-        element: "magia",
-        ranges: null,
         meta: spell,
       };
     }
@@ -119,13 +41,7 @@
       return {
         kind: "equipment",
         title: equipment ? equipment.name : card.baseId,
-        subtitle: equipment ? equipment.description : "",
         portrait: equipment ? equipment.portrait : "",
-        badge: "Equipamento",
-        label: equipment ? equipment.role : "arsenal",
-        tribe: null,
-        element: "equipamento",
-        ranges: null,
         meta: equipment,
       };
     }
@@ -135,28 +51,22 @@
     return {
       kind: "creature",
       title: creature ? creature.name : card.baseId,
-      subtitle: creature ? creature.tagline : "",
       portrait: creature ? creature.portrait : "",
-      badge: tribe ? tribe.name : "Criatura",
-      label: global.TCGIdleRolling.rollQualityLabel(card),
       tribe: tribe,
-      element: creature ? creature.element : "",
-      ranges: creature ? creature.ranges : null,
       meta: creature,
     };
   }
 
-  function getDamageProfile(meta) {
+  function normalizeDamageProfile(meta) {
     const profile = meta && meta.damageProfile ? meta.damageProfile : meta || {};
     const elemental = [];
     const rawElemental = profile.elemental || meta && meta.elementalDamage || [];
     if (Array.isArray(rawElemental)) {
       rawElemental.forEach((entry) => {
         if (!entry || !entry.element) return;
-        elemental.push({
-          element: entry.element,
-          amount: Number.isFinite(entry.amount) ? entry.amount : (Number.isFinite(entry.damage) ? entry.damage : 0),
-        });
+        const amount = Number.isFinite(entry.amount) ? entry.amount : (Number.isFinite(entry.damage) ? entry.damage : 0);
+        if (amount <= 0) return;
+        elemental.push({ element: entry.element, amount: amount });
       });
     }
     return {
@@ -164,85 +74,152 @@
       cosmic: Number.isFinite(profile.cosmic) ? profile.cosmic : (Number.isFinite(meta && meta.cosmicDamage) ? meta.cosmicDamage : 0),
       magic: Number.isFinite(profile.magic) ? profile.magic : (Number.isFinite(meta && meta.magicDamage) ? meta.magicDamage : 0),
       true: Number.isFinite(profile.true) ? profile.true : (Number.isFinite(meta && meta.trueDamage) ? meta.trueDamage : 0),
-      elemental: elemental.filter((entry) => entry.amount > 0),
+      elemental: elemental,
     };
   }
 
-  function renderActionDamageStrip(doc, action) {
-    const profile = getDamageProfile(action);
-    const wrap = doc.createElement("div");
-    wrap.className = "action-damage-strip";
+  function getElementLabel(element) {
+    const labels = {
+      fire: "Elem Fogo",
+      water: "Elem Agua",
+      earth: "Elem Terra",
+      air: "Elem Ar",
+    };
+    return labels[element] || ("Elem " + element);
+  }
 
-    const label = doc.createElement("span");
-    label.className = "action-damage-label";
-    label.textContent = "Dano";
-    wrap.appendChild(label);
-
-    if (profile.base > 0) {
-      wrap.appendChild(renderActionDamageChip(doc, "base", "Base " + profile.base, "Dano base incondicional"));
-    }
-    if (profile.cosmic > 0) {
-      wrap.appendChild(renderActionDamageChip(doc, "cosmic", "Cos " + profile.cosmic, "Dano cosmico"));
-    }
-    if (profile.magic > 0) {
-      wrap.appendChild(renderActionDamageChip(doc, "magic", "Mag " + profile.magic, "Dano magico"));
-    }
-    if (profile.true > 0) {
-      wrap.appendChild(renderActionDamageChip(doc, "true", "Ver " + profile.true, "Dano verdadeiro"));
-    }
+  function getDamageEntries(meta, options) {
+    const settings = Object.assign({ includeBase: true }, options);
+    const profile = normalizeDamageProfile(meta);
+    const entries = [];
+    if (settings.includeBase && profile.base > 0) entries.push({ tone: "base", label: "Base", value: profile.base });
+    if (profile.cosmic > 0) entries.push({ tone: "cosmic", label: "Cosmico", value: profile.cosmic });
     profile.elemental.forEach((entry) => {
-      wrap.appendChild(renderActionDamageChip(doc, "elemental", getElementDamageLabel(entry), "Dano elemental " + entry.element + " +" + entry.amount));
+      entries.push({ tone: "elemental", label: getElementLabel(entry.element), value: entry.amount });
+    });
+    if (profile.magic > 0) entries.push({ tone: "magic", label: "Magico", value: profile.magic });
+    if (profile.true > 0) entries.push({ tone: "true", label: "Verdadeiro", value: profile.true });
+    return entries;
+  }
+
+  function describeScaleEntry(entry) {
+    const statMeta = STAT_META[entry.stat];
+    const statLabel = statMeta ? statMeta.short : entry.stat;
+    const percent = Math.round((entry.ratio || 0) * 100);
+    return "+" + percent + "% de " + statLabel;
+  }
+
+  function describeModifier(effect) {
+    if (!effect) return "";
+    const parts = [];
+    if (effect.source) parts.push(effect.source + ":");
+    if (effect.flatDamage) parts.push("+" + effect.flatDamage + " dano");
+    if (effect.flatMitigation) parts.push("+" + effect.flatMitigation + " mitigacao");
+    if (effect.thresholdBonus) parts.push("+" + effect.thresholdBonus + " em checks");
+    if (effect.bonusEnergy) parts.push("+" + effect.bonusEnergy + " Energia inicial");
+    if (Array.isArray(effect.statScale) && effect.statScale.length) {
+      parts.push(effect.statScale.map(describeScaleEntry).join(", "));
+    }
+    if (effect.lane === "frontline") parts.push("na frontline");
+    if (effect.lane === "backline") parts.push("na backline");
+    return parts.join(" ");
+  }
+
+  function describeActionChecks(meta) {
+    if (!meta || !Array.isArray(meta.checks) || !meta.checks.length) return "";
+    return meta.checks.map((check) => {
+      const statMeta = STAT_META[check.stat];
+      const statLabel = statMeta ? statMeta.short : check.stat;
+      const success = check.success && check.success.flatDamage ? "+" + check.success.flatDamage + " dano" : "efeito adicional";
+      return "Check " + statLabel + " " + (check.threshold || 0) + ": " + success;
+    }).join(" ");
+  }
+
+  function getEffectText(card, info) {
+    if (info.meta && typeof info.meta.description === "string" && info.meta.description) {
+      return info.meta.description;
+    }
+    if (card.cardType === "creature" && info.meta && Array.isArray(info.meta.passives) && info.meta.passives.length) {
+      return info.meta.passives.map(describeModifier).filter(Boolean).join(" ");
+    }
+    if (card.cardType === "action") {
+      return describeActionChecks(info.meta);
+    }
+    return "";
+  }
+
+  function getTokenLabel(card, info) {
+    if (card.cardType === "creature") {
+      const tokenCount = info.meta && Number.isFinite(info.meta.tokenCount) ? info.meta.tokenCount : 0;
+      return "Tokens " + tokenCount;
+    }
+    if (card.cardType === "spell") {
+      const tokenCost = info.meta && Number.isFinite(info.meta.tokenCost) ? info.meta.tokenCost : 0;
+      return "Custo " + tokenCost + " token" + (tokenCost === 1 ? "" : "s");
+    }
+    return "";
+  }
+
+  function renderDamageStack(doc, entries, options) {
+    const settings = Object.assign({ compact: false, limit: 99, emptyLabel: "Sem dano extra" }, options);
+    const wrap = doc.createElement("div");
+    wrap.className = "damage-stack";
+    if (settings.compact) wrap.classList.add("damage-stack-compact");
+
+    const visible = entries.slice(0, settings.limit);
+    visible.forEach((entry) => {
+      const row = doc.createElement("div");
+      row.className = "damage-chip";
+      row.dataset.tone = entry.tone;
+      row.innerHTML = "<span>" + entry.label + "</span><strong>" + entry.value + "</strong>";
+      wrap.appendChild(row);
+    });
+
+    if (!visible.length) {
+      const empty = doc.createElement("div");
+      empty.className = "damage-chip";
+      empty.dataset.tone = "empty";
+      empty.innerHTML = "<span>" + settings.emptyLabel + "</span>";
+      wrap.appendChild(empty);
+    } else if (entries.length > visible.length) {
+      const extra = doc.createElement("div");
+      extra.className = "damage-chip";
+      extra.dataset.tone = "meta";
+      extra.innerHTML = "<span>+" + (entries.length - visible.length) + "</span>";
+      wrap.appendChild(extra);
+    }
+    return wrap;
+  }
+
+  function renderCompactStats(doc, card) {
+    const wrap = doc.createElement("div");
+    wrap.className = "card-stat-column";
+    global.TCGIdleRolling.STAT_KEYS.forEach((key) => {
+      const meta = STAT_META[key];
+      const row = doc.createElement("div");
+      row.className = "card-stat-line";
+      if (key === "energy") row.dataset.stat = "energy";
+      row.innerHTML = "<span>" + meta.short + "</span><strong>" + card.stats[key] + "</strong>";
+      wrap.appendChild(row);
     });
     return wrap;
   }
 
-  function renderActionDamageChip(doc, tone, text, title) {
-    const chip = doc.createElement("span");
-    chip.className = "action-damage-chip";
-    chip.dataset.tone = tone;
-    chip.textContent = text;
-    chip.title = title;
-    return chip;
-  }
-
-  function getElementDamageLabel(entry) {
-    const labels = {
-      fire: "Ele fogo ",
-      water: "Ele agua ",
-      earth: "Ele terra ",
-      air: "Ele ar ",
+  function getCardDisplayModel(card) {
+    const info = resolveCardBase(card);
+    return {
+      title: info.title,
+      effectText: getEffectText(card, info),
+      tokenLabel: getTokenLabel(card, info),
+      damageEntries: getDamageEntries(info.meta, { includeBase: true }),
+      info: info,
     };
-    return (labels[entry.element] || ("Ele " + entry.element + " ")) + entry.amount;
-  }
-
-  function renderMetaChips(doc, card, info) {
-    const wrap = doc.createElement("div");
-    wrap.className = "location-highlights";
-    if (card.cardType === "location" && info.meta) {
-      wrap.innerHTML =
-        '<span class="location-chip">Adjacentes: ' + (info.meta.adjacentLocationIds || []).length + "</span>" +
-        '<span class="location-chip">Duracao: ' + Math.round(info.meta.durationMs / 1000) + "s</span>";
-      return wrap;
-    }
-    if (card.cardType === "action" && info.meta) {
-      wrap.appendChild(renderActionDamageStrip(doc, info.meta));
-      wrap.appendChild(renderActionDamageChip(doc, "meta", info.badge, "Tipo de carta"));
-      wrap.appendChild(renderActionDamageChip(doc, "meta", info.label, "Papel tatico"));
-      return wrap;
-    }
-    if ((card.cardType === "spell" || card.cardType === "equipment") && info.meta) {
-      wrap.innerHTML =
-        '<span class="location-chip">' + info.badge + "</span>" +
-        '<span class="location-chip">' + info.label + "</span>";
-      return wrap;
-    }
-    return null;
   }
 
   function renderCard(doc, card, options) {
     options = options || {};
-    const info = resolveCardBase(card);
-    const quality = global.TCGIdleRolling.rollQualityLabel(card);
+    const model = getCardDisplayModel(card);
+    const info = model.info;
 
     const el = doc.createElement("article");
     el.className = "card-token";
@@ -271,56 +248,75 @@
 
     const frame = doc.createElement("div");
     frame.className = "card-frame";
-
     const portrait = doc.createElement("div");
     portrait.className = "card-portrait";
     if (info.portrait) {
       const img = doc.createElement("img");
       img.src = info.portrait;
-      img.alt = info.title;
+      img.alt = model.title;
       img.loading = "lazy";
       portrait.appendChild(img);
     }
-
-    const frameHeader = doc.createElement("header");
-    frameHeader.className = "card-frame-header";
-    const leftTag = doc.createElement("span");
-    leftTag.className = "card-tribe-tag";
-    leftTag.textContent = info.badge;
-    const rightTag = doc.createElement("span");
-    rightTag.className = "card-quality-tag";
-    rightTag.textContent = card.cardType === "creature" ? quality : info.label;
-    frameHeader.append(leftTag, rightTag);
-    frame.append(frameHeader, portrait);
+    frame.appendChild(portrait);
 
     const body = doc.createElement("div");
     body.className = "card-body";
 
     const name = doc.createElement("h3");
     name.className = "card-name";
-    name.textContent = info.title;
+    name.textContent = model.title;
+    body.appendChild(name);
 
-    const subtitle = doc.createElement("p");
-    subtitle.className = "card-subtitle";
-    subtitle.textContent = info.subtitle;
+    const layout = doc.createElement("div");
+    layout.className = "card-layout";
+    layout.dataset.kind = card.cardType || "creature";
 
-    const element = doc.createElement("span");
-    element.className = "card-element";
-    element.dataset.element = info.element;
-    element.textContent = card.cardType === "location" ? "local" : card.cardType === "action" ? "acao" : card.cardType === "spell" ? "magia" : info.element;
+    if (card.cardType === "creature") {
+      const left = doc.createElement("aside");
+      left.className = "card-side-panel";
+      left.appendChild(renderDamageStack(doc, model.damageEntries));
 
-    body.append(name, subtitle, element);
+      const center = doc.createElement("div");
+      center.className = "card-main-copy";
+      center.innerHTML = '<p class="card-effect-text">' + (model.effectText || "Sem efeito adicional.") + "</p>";
 
-    if (card.cardType === "creature" && options.stats !== false) {
-      const stats = doc.createElement("div");
-      stats.className = "card-stats";
-      global.TCGIdleRolling.STAT_KEYS.forEach((key) => {
-        stats.appendChild(statRow(doc, key, card.stats[key], info.ranges ? info.ranges[key] : null));
-      });
-      body.appendChild(stats);
+      const right = renderCompactStats(doc, card);
+      layout.append(left, center, right);
+      body.appendChild(layout);
+
+      const footer = doc.createElement("div");
+      footer.className = "card-footer-strip";
+      footer.innerHTML = '<span class="card-token-pill">' + model.tokenLabel + "</span>";
+      body.appendChild(footer);
+    } else if (card.cardType === "action") {
+      const left = doc.createElement("aside");
+      left.className = "card-side-panel";
+      left.appendChild(renderDamageStack(doc, model.damageEntries));
+
+      const center = doc.createElement("div");
+      center.className = "card-main-copy";
+      center.innerHTML = '<p class="card-effect-text">' + (model.effectText || "Sem efeito adicional.") + "</p>";
+      layout.append(left, center);
+      body.appendChild(layout);
+    } else if (card.cardType === "spell") {
+      const left = doc.createElement("aside");
+      left.className = "card-side-panel";
+      const cost = doc.createElement("div");
+      cost.className = "card-token-cost";
+      cost.textContent = model.tokenLabel;
+      left.appendChild(cost);
+
+      const center = doc.createElement("div");
+      center.className = "card-main-copy";
+      center.innerHTML = '<p class="card-effect-text">' + (model.effectText || "Sem efeito adicional.") + "</p>";
+      layout.append(left, center);
+      body.appendChild(layout);
     } else {
-      const chips = renderMetaChips(doc, card, info);
-      if (chips) body.appendChild(chips);
+      const centerOnly = doc.createElement("div");
+      centerOnly.className = "card-main-copy card-main-copy-wide";
+      centerOnly.innerHTML = '<p class="card-effect-text">' + (model.effectText || "Sem efeito adicional.") + "</p>";
+      layout.append(centerOnly);
+      body.appendChild(layout);
     }
 
     el.append(frame, body);
@@ -330,6 +326,9 @@
   global.TCGIdleCardRender = {
     renderCard: renderCard,
     STAT_META: STAT_META,
-    getStatIconMarkup: getStatIconMarkup,
+    getDamageEntries: getDamageEntries,
+    renderDamageStack: renderDamageStack,
+    renderCompactStats: renderCompactStats,
+    getCardDisplayModel: getCardDisplayModel,
   };
 })(window);

@@ -827,6 +827,41 @@ p { margin: 0; }
   gap: 6px;
 }
 
+.deck-damage-summary {
+  margin-top: 2px;
+}
+
+.deck-damage-summary .damage-stack {
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+}
+
+.deck-damage-summary .damage-chip {
+  padding: 4px 6px;
+  font-size: 0.58rem;
+}
+
+.deck-effect-summary {
+  font-family: var(--font-flavor);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: rgba(242, 231, 204, 0.72);
+}
+
+.deck-token-summary {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--tribe-accent) 38%, transparent);
+  background: rgba(0, 0, 0, 0.34);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bone-soft);
+}
+
 .deck-location-slot .slot-number,
 .deck-slot .slot-number {
   font-family: var(--font-mono);
@@ -1040,6 +1075,10 @@ p { margin: 0; }
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.picker-option-damage .damage-stack {
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
 }
 
 .picker-option-stats {

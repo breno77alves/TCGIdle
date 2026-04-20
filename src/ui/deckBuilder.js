@@ -105,6 +105,44 @@
       "</div>";
   }
 
+  function renderSlotStatsNode(doc, card, extraClass) {
+    const wrap = doc.createElement("div");
+    wrap.innerHTML = renderSlotStats(card);
+    const node = wrap.firstChild;
+    if (node && extraClass) node.classList.add(extraClass);
+    return node;
+  }
+
+  function renderDeckDamageSummary(doc, card, options) {
+    const model = global.TCGIdleCardRender.getCardDisplayModel(card);
+    const wrap = doc.createElement("div");
+    wrap.className = "deck-damage-summary";
+    wrap.appendChild(global.TCGIdleCardRender.renderDamageStack(doc, model.damageEntries, {
+      compact: true,
+      limit: options && options.limit ? options.limit : 4,
+      emptyLabel: "Sem dano",
+    }));
+    return wrap;
+  }
+
+  function renderDeckEffectSummary(doc, card) {
+    const model = global.TCGIdleCardRender.getCardDisplayModel(card);
+    if (!model.effectText) return null;
+    const text = doc.createElement("p");
+    text.className = "deck-effect-summary";
+    text.textContent = model.effectText;
+    return text;
+  }
+
+  function renderDeckTokenSummary(doc, card) {
+    const model = global.TCGIdleCardRender.getCardDisplayModel(card);
+    if (!model.tokenLabel) return null;
+    const token = doc.createElement("span");
+    token.className = "deck-token-summary";
+    token.textContent = model.tokenLabel;
+    return token;
+  }
+
   function getSubtypeLabel(card) {
     if (!card) return "";
     if (card.cardType === "creature") {
@@ -184,8 +222,20 @@
           '<span class="slot-number">' + meta.title + " " + (index + 1) + "</span>" +
           "<strong>" + getCardTitle(card) + "</strong>" +
           '<span class="slot-tribe">' + getCardSubtitle(card) + "</span>" +
-          (creatureSlot ? '<span class="slot-lane-badge" data-lane="' + creatureSlot.lane + '">' + (creatureSlot.lane === "backline" ? "Backline" : "Frontline") + "</span>" : "") +
-          renderSlotStats(card);
+          (creatureSlot ? '<span class="slot-lane-badge" data-lane="' + creatureSlot.lane + '">' + (creatureSlot.lane === "backline" ? "Backline" : "Frontline") + "</span>" : "");
+        if (card.cardType === "creature" || card.cardType === "action") {
+          copy.appendChild(renderDeckDamageSummary(ctx.doc, card, { limit: 4 }));
+        }
+        if (card.cardType === "creature") {
+          copy.appendChild(renderSlotStatsNode(ctx.doc, card));
+          const token = renderDeckTokenSummary(ctx.doc, card);
+          if (token) copy.appendChild(token);
+        } else {
+          const effect = renderDeckEffectSummary(ctx.doc, card);
+          if (effect) copy.appendChild(effect);
+          const token = renderDeckTokenSummary(ctx.doc, card);
+          if (token) copy.appendChild(token);
+        }
         slot.appendChild(copy);
       } else {
         slot.innerHTML =
@@ -315,9 +365,25 @@
       copy.className = "picker-option-copy";
       copy.innerHTML =
         "<strong>" + getCardTitle(card) + "</strong>" +
-        "<span>" + getCardSubtitle(card) + "</span>" +
-        (card.cardType === "creature" ? renderSlotStats(card).replace('slot-stats', 'slot-stats picker-option-stats') : "") +
-        (check.ok ? "" : "<em>" + check.reason + "</em>");
+        "<span>" + getCardSubtitle(card) + "</span>";
+      if (card.cardType === "creature" || card.cardType === "action") {
+        const damage = renderDeckDamageSummary(ctx.doc, card, { limit: 5 });
+        damage.classList.add("picker-option-damage");
+        copy.appendChild(damage);
+      }
+      if (card.cardType === "creature") {
+        copy.appendChild(renderSlotStatsNode(ctx.doc, card, "picker-option-stats"));
+      } else {
+        const effect = renderDeckEffectSummary(ctx.doc, card);
+        if (effect) copy.appendChild(effect);
+        const token = renderDeckTokenSummary(ctx.doc, card);
+        if (token) copy.appendChild(token);
+      }
+      if (!check.ok) {
+        const reason = ctx.doc.createElement("em");
+        reason.textContent = check.reason;
+        copy.appendChild(reason);
+      }
       option.appendChild(copy);
 
       if (check.ok) {

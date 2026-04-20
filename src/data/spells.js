@@ -7,6 +7,7 @@
       tagline: "Ferramenta de leitura para o duelista antecipar trocas.",
       description: "Item ativo voltado a leitura tatica e ajustes de momento durante a batalha.",
       role: "utility",
+      tokenCost: 2,
       duelModifiers: [{ trigger: "onCheck", stat: "wisdom", thresholdBonus: 6, source: "Visor do Futuro" }],
     },
     {
@@ -16,6 +17,7 @@
       tagline: "Recuperacao emergencial em janelas curtas.",
       description: "Item ativo de suporte para preservar criaturas sob pressao.",
       role: "support",
+      tokenCost: 1,
       duelModifiers: [{ trigger: "onDefend", flatMitigation: 2, source: "Primeiros Socorros" }],
     },
     {
@@ -25,6 +27,7 @@
       tagline: "Leitura de picos de Potencia e resposta rapida.",
       description: "Ajuda o jogador a sincronizar recursos ativos com o fluxo do duelo.",
       role: "utility",
+      tokenCost: 2,
       duelModifiers: [{ trigger: "onAttack", statScale: [{ stat: "power", ratio: 0.04 }], source: "Sensor de Poder" }],
     },
     {
@@ -34,6 +37,7 @@
       tagline: "Reposicionamento urgente quando a linha quebra.",
       description: "Item ativo para momentos de desvantagem tensa.",
       role: "tempo",
+      tokenCost: 2,
       duelModifiers: [{ trigger: "onAttack", lane: "backline", flatDamage: 2, source: "Troca Emergencial" }],
     },
     {
@@ -43,6 +47,7 @@
       tagline: "Impulso de alto risco em janelas curtas.",
       description: "Aposta tensa que favorece viradas improvaveis.",
       role: "swing",
+      tokenCost: 3,
       duelModifiers: [{ trigger: "onAttack", percentDamage: 0.08, source: "Sorte de Iniciante" }],
     },
     {
@@ -52,6 +57,7 @@
       tagline: "Foco do duelista para desacelerar o caos da arena.",
       description: "Item ativo para estabilizar o campo e recuperar controle.",
       role: "support",
+      tokenCost: 1,
       duelModifiers: [{ trigger: "onDefend", statScale: [{ stat: "wisdom", ratio: 0.04 }], source: "Meditador" }],
     },
   ];

@@ -8,6 +8,7 @@
       combatTags: ["frontline", "guardian"],
       portrait: "Arte/ArtWork/Champion/Belmon.png",
       passives: [{ trigger: "onDefend", lane: "frontline", flatMitigation: 3, source: "Juramento Inquebravel" }],
+      tokenCount: 2,
       damageProfile: {
         base: 4,
         true: 1,
@@ -29,6 +30,7 @@
       combatTags: ["frontline", "skirmisher"],
       portrait: "Arte/ArtWork/Champion/Hirum.png",
       passives: [{ trigger: "onAttack", statScale: [{ stat: "speed", ratio: 0.05 }], source: "Passo do Sentinela" }],
+      tokenCount: 1,
       damageProfile: {
         base: 4,
         elemental: [{ element: "air", amount: 3 }],
@@ -50,6 +52,7 @@
       combatTags: ["frontline", "bruiser"],
       portrait: "Arte/ArtWork/Champion/Grimodari.png",
       passives: [{ trigger: "onAttack", statScale: [{ stat: "power", ratio: 0.06 }], source: "Pressao de Aco" }],
+      tokenCount: 1,
       damageProfile: {
         base: 5,
         elemental: [{ element: "earth", amount: 2 }],
@@ -71,6 +74,7 @@
       combatTags: ["frontline", "berserker"],
       portrait: "Arte/ArtWork/Champion/Ygar.png",
       passives: [{ trigger: "onAttack", flatDamage: 2, source: "Fornalha Interna" }],
+      tokenCount: 2,
       damageProfile: {
         base: 4,
         elemental: [{ element: "fire", amount: 3 }],
@@ -93,6 +97,7 @@
       combatTags: ["backline", "assassin"],
       portrait: "Arte/ArtWork/Champion/Kirr.png",
       passives: [{ trigger: "onAttack", lane: "backline", statScale: [{ stat: "speed", ratio: 0.07 }], source: "Mapa de Vento" }],
+      tokenCount: 1,
       damageProfile: {
         base: 3,
         elemental: [{ element: "air", amount: 2 }],
@@ -115,6 +120,7 @@
       combatTags: ["backline", "support"],
       portrait: "Arte/ArtWork/Champion/Samish.png",
       passives: [{ trigger: "onAttack", lane: "backline", statScale: [{ stat: "wisdom", ratio: 0.08 }], source: "Memoria Coletiva" }],
+      tokenCount: 3,
       damageProfile: {
         base: 3,
         elemental: [{ element: "water", amount: 2 }],

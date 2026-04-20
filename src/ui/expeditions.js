@@ -24,35 +24,6 @@
     return global.TCGIdleData.getLocation(viewState.selectedLocationId);
   }
 
-  function sampleNames(pool, key, resolver) {
-    if (!Array.isArray(pool) || !pool.length) return [];
-    return pool.slice(0, 3).map((entry) => resolver(entry[key])).filter(Boolean);
-  }
-
-  function renderPotentialDrops(doc, location) {
-    const wrap = doc.createElement("section");
-    wrap.className = "drop-summary";
-
-    const creatureNames = sampleNames(location.creaturePool, "creatureId", global.TCGIdleData.getCreature).map((entry) => entry.name);
-    const actionNames = sampleNames(location.actionPool, "actionId", global.TCGIdleData.getAction).map((entry) => entry.name);
-    const spellNames = sampleNames(location.spellPool, "spellId", global.TCGIdleData.getSpell).map((entry) => entry.name);
-
-    function addRow(title, names, total) {
-      const row = doc.createElement("div");
-      row.className = "drop-summary-row";
-      const suffix = total > names.length ? " +" + (total - names.length) : "";
-      row.innerHTML =
-        "<strong>" + title + "</strong>" +
-        "<span>" + (names.length ? names.join(" · ") + suffix : "Sem registros") + "</span>";
-      wrap.appendChild(row);
-    }
-
-    addRow("Criaturas", creatureNames, (location.creaturePool || []).length);
-    addRow("Acoes", actionNames, (location.actionPool || []).length);
-    addRow("Magias", spellNames, (location.spellPool || []).length);
-    return wrap;
-  }
-
   function renderFullDropDisclosure(doc, state, location) {
     const details = doc.createElement("details");
     details.className = "info-disclosure";
@@ -227,7 +198,6 @@
         '<div class="status-head"><p class="eyebrow">Varredura preparada</p><h4>Entrar em expedicao</h4></div>' +
         '<p class="flavor">Duracao fixa: ' + formatDuration(location.durationMs) + ". Retorno entre " + location.dropCountRange[0] + " e " + location.dropCountRange[1] + ' scans, com baixa chance de descobrir um local adjacente.</p>';
 
-      statusCard.appendChild(renderPotentialDrops(ctx.doc, location));
       statusCard.appendChild(renderFullDropDisclosure(ctx.doc, state, location));
 
       const start = ctx.doc.createElement("button");
