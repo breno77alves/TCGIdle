@@ -8,6 +8,9 @@
       description: "Ao pagar 10 tokens, aumenta em 5 a margem dos checks de SA enquanto o efeito estiver ativo.",
       role: "utility",
       tokenCost: 10,
+      targetType: "none",
+      durationTicks: 3,
+      cooldownTicks: 4,
       duelModifiers: [{ trigger: "onCheck", stat: "wisdom", thresholdBonus: 5, source: "Visor do Futuro" }],
     },
     {
@@ -18,6 +21,9 @@
       description: "Ao pagar 5 tokens, reduz em 5 o dano recebido pela criatura protegida enquanto o efeito durar.",
       role: "support",
       tokenCost: 5,
+      targetType: "ally",
+      durationTicks: 3,
+      cooldownTicks: 3,
       duelModifiers: [{ trigger: "onDefend", flatMitigation: 5, source: "Primeiros Socorros" }],
     },
     {
@@ -28,6 +34,9 @@
       description: "Ao pagar 10 tokens, converte parte da PO em mais 5 de dano por engajamento ofensivo.",
       role: "utility",
       tokenCost: 10,
+      targetType: "ally",
+      durationTicks: 3,
+      cooldownTicks: 4,
       duelModifiers: [{ trigger: "onAttack", statScale: [{ stat: "power", ratio: 0.04 }], source: "Sensor de Poder" }],
     },
     {
@@ -38,6 +47,9 @@
       description: "Ao pagar 10 tokens, acrescenta 5 de dano quando sua criatura engajar a partir da backline.",
       role: "tempo",
       tokenCost: 10,
+      targetType: "ally",
+      durationTicks: 3,
+      cooldownTicks: 4,
       duelModifiers: [{ trigger: "onAttack", lane: "backline", flatDamage: 5, source: "Troca Emergencial" }],
     },
     {
@@ -48,6 +60,9 @@
       description: "Ao pagar 15 tokens, aumenta o dano total causado durante o efeito ativo.",
       role: "swing",
       tokenCost: 15,
+      targetType: "none",
+      durationTicks: 2,
+      cooldownTicks: 5,
       duelModifiers: [{ trigger: "onAttack", percentDamage: 0.08, source: "Sorte de Iniciante" }],
     },
     {
@@ -58,6 +73,9 @@
       description: "Ao pagar 5 tokens, reforca a defesa convertendo parte da SA em mitigacao enquanto o efeito durar.",
       role: "support",
       tokenCost: 5,
+      targetType: "ally",
+      durationTicks: 3,
+      cooldownTicks: 3,
       duelModifiers: [{ trigger: "onDefend", statScale: [{ stat: "wisdom", ratio: 0.04 }], source: "Meditador" }],
     },
   ];

@@ -12,6 +12,7 @@
   let duelTimer = null;
   let toastTimer = null;
   let resetDialogBound = false;
+  const DUEL_TICK_MS = 1600;
 
   function persist(message) {
     if (message) state.meta.lastAction = message;
@@ -51,11 +52,16 @@
       doc: documentRef,
       onStartExpedition: handleStartExpedition,
       onClaimReward: handleClaimReward,
+      onSelectRewardOption: handleSelectRewardOption,
       onAssignDeckCard: handleAssignDeckCard,
       onClearDeckCard: handleClearDeckCard,
       onSetCreatureLane: handleSetCreatureLane,
       onInspectCard: handleInspectCard,
       onStartDuel: handleStartDuel,
+      onQueueSpell: handleQueueSpell,
+      onChooseDuelTarget: handleChooseDuelTarget,
+      onCancelPendingSpell: handleCancelPendingSpell,
+      onSetDuelFocus: handleSetDuelFocus,
       requestRender: requestRender,
     };
     global.TCGIdleCollectionView.render(state, ctx);
@@ -68,7 +74,7 @@
     const sessions = documentRef.querySelector("#sessions-value");
     const lastAction = documentRef.querySelector("#last-action");
     if (sessions) sessions.textContent = String(state.meta.bootCount);
-    if (lastAction) lastAction.textContent = state.meta.lastAction || "—";
+    if (lastAction) lastAction.textContent = state.meta.lastAction || "-";
     const essence = documentRef.querySelector("#essence-value");
     if (essence) essence.textContent = String(state.progress.essence);
     const duelsWon = documentRef.querySelector("#duels-value");
@@ -109,11 +115,23 @@
 
   function handleClaimReward() {
     const result = global.TCGIdleExpedition.claimReward(state);
-    if (!result.ok) return;
-    const newLocations = result.drops.filter((card) => card.cardType === "location").length;
-    persist("Arquivados " + result.drops.length + " novos scans");
+    if (!result.ok) {
+      showToast(result.reason || "Escolha as cartas antes de arquivar", "warn");
+      return;
+    }
+    const newLocations = result.claimedDrops.filter((card) => card.cardType === "location").length;
+    persist("Arquivados " + result.claimedDrops.length + " novos scans");
     render();
     showToast(newLocations ? "Novo local revelado no tomo" : "Scans arquivados no tomo", "success");
+  }
+
+  function handleSelectRewardOption(groupId, instanceId) {
+    const result = global.TCGIdleExpedition.selectRewardOption(state, groupId, instanceId);
+    if (!result.ok) {
+      showToast(result.reason, "warn");
+      return;
+    }
+    render();
   }
 
   function handleAssignDeckCard(sectionName, slotIndex, instanceId) {
@@ -160,6 +178,50 @@
     startDuelLoop();
   }
 
+  function handleQueueSpell(spellInstanceId) {
+    const result = global.TCGIdleDuel.queuePlayerSpell(state, spellInstanceId);
+    if (!result.ok) {
+      showToast(result.reason, "warn");
+      return;
+    }
+    persist(result.pending ? "Magia preparada para escolha de alvo" : "Magia ativada durante o duelo");
+    render();
+    showToast(result.pending ? "Selecione o alvo da magia" : "Magia ativada", result.pending ? "default" : "success");
+  }
+
+  function handleChooseDuelTarget(targetId) {
+    const current = state.duel.current;
+    if (!current) return;
+    if (current.pendingInput) {
+      const result = global.TCGIdleDuel.choosePendingTarget(state, targetId);
+      if (!result.ok) {
+        showToast(result.reason, "warn");
+        return;
+      }
+      persist("Magia aplicada em " + (result.target ? result.target.name : "alvo"));
+      render();
+      showToast("Magia aplicada", "success");
+      return;
+    }
+    handleSetDuelFocus(targetId);
+  }
+
+  function handleCancelPendingSpell() {
+    const result = global.TCGIdleDuel.cancelPendingInput(state);
+    if (!result.ok) return;
+    render();
+  }
+
+  function handleSetDuelFocus(targetId) {
+    const result = global.TCGIdleDuel.setPlayerFocus(state, targetId);
+    if (!result.ok) {
+      showToast(result.reason, "warn");
+      return;
+    }
+    persist("Foco de combate ajustado para " + result.target.name);
+    render();
+  }
+
   function startDuelLoop() {
     if (duelTimer) clearInterval(duelTimer);
     duelTimer = setInterval(() => {
@@ -174,8 +236,8 @@
         const npcName = res.npc ? res.npc.name : "oponente";
         if (res.outcome === "won") {
           let message = "Vitoria contra " + npcName;
-          if (res.specialUnlocked) message += " · prova especial desbloqueada";
-          if (res.rewardDrops && res.rewardDrops.length) message += " · scan super raro obtido";
+          if (res.specialUnlocked) message += " - prova especial desbloqueada";
+          if (res.rewardDrops && res.rewardDrops.length) message += " - scan super raro obtido";
           persist(message);
           showToast(res.rewardDrops && res.rewardDrops.length ? "Scan super raro conquistado" : "Vitoria no duelo", "success");
         } else {
@@ -183,7 +245,7 @@
           showToast("Derrota no duelo", "warn");
         }
       }
-    }, 900);
+    }, DUEL_TICK_MS);
   }
 
   function stopDuelLoop() {
@@ -197,8 +259,10 @@
     if (state.expeditions.active && global.TCGIdleExpedition.isExpeditionReady(state)) {
       const result = global.TCGIdleExpedition.completeExpedition(state);
       if (result.ok) {
-        const locations = result.drops.filter((card) => card.cardType === "location").length;
-        persist("Expedicao concluida · " + result.drops.length + " scan(s) obtido(s)");
+        const locations = result.choiceGroups
+          .filter((group) => group.cardType === "location")
+          .reduce((sum, group) => sum + group.options.length, 0);
+        persist("Expedicao concluida com novas escolhas de scan");
         render();
         showToast(locations ? "Rota adjacente detectada" : "Expedicao concluida", "success");
         return;

@@ -54,6 +54,7 @@
     appendGroup("Criaturas possiveis", location.creaturePool, "creatureId", global.TCGIdleData.getCreature);
     appendGroup("Acoes possiveis", location.actionPool, "actionId", global.TCGIdleData.getAction);
     appendGroup("Magias possiveis", location.spellPool, "spellId", global.TCGIdleData.getSpell);
+    appendGroup("Equipamentos possiveis", global.TCGIdleData.equipment.map((entry) => ({ equipmentId: entry.id })), "equipmentId", global.TCGIdleData.getEquipment);
 
     const adjacent = doc.createElement("section");
     adjacent.className = "drop-table-group";
@@ -156,6 +157,53 @@
     return container;
   }
 
+  function renderPendingReward(doc, ctx, pending) {
+    const wrap = doc.createElement("div");
+    wrap.className = "reward-grid reward-grid-expanded";
+
+    if (pending.guaranteedDrops && pending.guaranteedDrops.length) {
+      const guaranteed = doc.createElement("section");
+      guaranteed.className = "reward-choice-group";
+      guaranteed.innerHTML = '<p class="eyebrow">Entram direto no tomo</p><p class="flavor">Cartas de acao sempre entram automaticamente na colecao.</p>';
+      const grid = doc.createElement("div");
+      grid.className = "card-grid catalog-detail-grid reward-choice-grid";
+      pending.guaranteedDrops.forEach((card) => {
+        grid.appendChild(global.TCGIdleCardRender.renderCard(doc, card));
+      });
+      guaranteed.appendChild(grid);
+      wrap.appendChild(guaranteed);
+    }
+
+    (pending.choiceGroups || []).forEach((group) => {
+      const requiredSelection = group.options.length > 1;
+      const section = doc.createElement("section");
+      section.className = "reward-choice-group";
+      section.innerHTML =
+        '<p class="eyebrow">Escolha de ' + group.cardType + '</p>' +
+        '<p class="flavor">' + (requiredSelection ? "Voce encontrou varias opcoes deste tipo. Escolha apenas uma para arquivar." : "Apenas uma opcao encontrada deste tipo.") + "</p>";
+
+      const grid = doc.createElement("div");
+      grid.className = "card-grid catalog-detail-grid reward-choice-grid";
+      group.options.forEach((card) => {
+        const button = doc.createElement("button");
+        button.type = "button";
+        button.className = "reward-choice-option";
+        button.dataset.selected = String(group.selectedInstanceId === card.instanceId);
+        button.appendChild(global.TCGIdleCardRender.renderCard(doc, card));
+        if (requiredSelection) {
+          button.addEventListener("click", () => ctx.onSelectRewardOption(group.id, card.instanceId));
+        } else {
+          button.disabled = true;
+        }
+        grid.appendChild(button);
+      });
+      section.appendChild(grid);
+      wrap.appendChild(section);
+    });
+
+    return wrap;
+  }
+
   function renderSelectedLocation(root, ctx, state, location) {
     const active = state.expeditions.active;
     const pending = state.expeditions.pendingReward;
@@ -171,17 +219,19 @@
     statusCard.className = "expedition-status";
 
     if (pending) {
+      const remainingChoices = (pending.choiceGroups || []).filter((group) => group.options.length > 1 && !group.selectedInstanceId).length;
       statusCard.dataset.state = "reward";
       statusCard.innerHTML = '<div class="status-head"><p class="eyebrow">Retorno</p><h4>Scans pendentes</h4></div>';
-      const body = ctx.doc.createElement("div");
-      body.className = "reward-grid";
-      pending.drops.forEach((card) => body.appendChild(global.TCGIdleCardRender.renderCard(ctx.doc, card)));
+      statusCard.appendChild(renderPendingReward(ctx.doc, ctx, pending));
       const claim = ctx.doc.createElement("button");
       claim.type = "button";
       claim.className = "action-button action-button-primary";
-      claim.textContent = "Arquivar " + pending.drops.length + (pending.drops.length === 1 ? " scan" : " scans");
+      claim.disabled = remainingChoices > 0;
+      claim.textContent = remainingChoices > 0
+        ? "Escolha " + remainingChoices + " grupo(s) antes de arquivar"
+        : "Arquivar scans no tomo";
       claim.addEventListener("click", ctx.onClaimReward);
-      statusCard.append(body, claim);
+      statusCard.appendChild(claim);
     } else if (active) {
       statusCard.dataset.state = "running";
       const finishAt = active.startedAt + active.durationMs;
@@ -191,12 +241,12 @@
         '<div class="status-head"><p class="eyebrow">Em campo</p><h4>Escaneando em ' + location.name + "</h4></div>" +
         '<div class="timer-line"><span id="expedition-remaining">' + formatDuration(remaining) + '</span><span class="timer-label">tempo restante</span></div>' +
         '<div class="timer-track"><div class="timer-fill" id="expedition-progress" style="width:' + (pct * 100).toFixed(1) + '%"></div></div>' +
-        '<p class="flavor">A expedicao depende apenas do jogador e do local ja conhecido. O deck nao precisa ser equipado para explorar.</p>';
+        '<p class="flavor">Cada expedicao retorna entre 1 e 3 achados. Acoes entram direto. Criaturas, magias, equipamentos e locais podem exigir escolha.</p>';
     } else {
       statusCard.dataset.state = "idle";
       statusCard.innerHTML =
         '<div class="status-head"><p class="eyebrow">Varredura preparada</p><h4>Entrar em expedicao</h4></div>' +
-        '<p class="flavor">Duracao fixa: ' + formatDuration(location.durationMs) + ". Retorno entre " + location.dropCountRange[0] + " e " + location.dropCountRange[1] + ' scans, com baixa chance de descobrir um local adjacente.</p>';
+        '<p class="flavor">Duracao fixa: ' + formatDuration(location.durationMs) + '. A expedicao encontra 1 a 3 cartas por retorno e pode revelar uma rota adjacente.</p>';
 
       statusCard.appendChild(renderFullDropDisclosure(ctx.doc, state, location));
 

@@ -1,6 +1,6 @@
 (function bootstrapState(global) {
   const STORAGE_KEY = "tcg-idle-save";
-  const SAVE_VERSION = 6;
+  const SAVE_VERSION = 7;
   const STARTER_LOCATION_COPIES = 6;
 
   function makeInstance(prefix, index) {
@@ -135,12 +135,34 @@
   }
 
   function sanitizePendingReward(candidate) {
-    if (!candidate || typeof candidate !== "object" || !Array.isArray(candidate.drops)) {
+    if (!candidate || typeof candidate !== "object") {
       return null;
     }
+    const legacyDrops = Array.isArray(candidate.drops) ? candidate.drops.map(sanitizeCard).filter(Boolean) : null;
+    const guaranteedDrops = Array.isArray(candidate.guaranteedDrops)
+      ? candidate.guaranteedDrops.map(sanitizeCard).filter(Boolean)
+      : (legacyDrops || []);
+    const choiceGroups = Array.isArray(candidate.choiceGroups)
+      ? candidate.choiceGroups.map((group, index) => {
+        if (!group || typeof group !== "object" || !Array.isArray(group.options)) return null;
+        const safeOptions = group.options.map(sanitizeCard).filter(Boolean);
+        if (!safeOptions.length) return null;
+        const selectedInstanceId = typeof group.selectedInstanceId === "string"
+          && safeOptions.some((card) => card.instanceId === group.selectedInstanceId)
+          ? group.selectedInstanceId
+          : (safeOptions.length === 1 ? safeOptions[0].instanceId : null);
+        return {
+          id: typeof group.id === "string" ? group.id : "reward-group-" + index,
+          cardType: typeof group.cardType === "string" ? group.cardType : safeOptions[0].cardType,
+          options: safeOptions,
+          selectedInstanceId: selectedInstanceId,
+        };
+      }).filter(Boolean)
+      : [];
     return {
       locationId: typeof candidate.locationId === "string" ? candidate.locationId : null,
-      drops: candidate.drops.map(sanitizeCard).filter(Boolean),
+      guaranteedDrops: guaranteedDrops,
+      choiceGroups: choiceGroups,
     };
   }
 
@@ -297,6 +319,10 @@
 
     if (version < 6) {
       migrated.meta.lastAction = "Save migrado para v6 com equipamentos vinculados por criatura e dano unificado";
+    }
+
+    if (version < 7) {
+      migrated.meta.lastAction = "Save migrado para v7 com escolhas de expedicao e duelo tatico revisado";
     }
 
     return migrated;

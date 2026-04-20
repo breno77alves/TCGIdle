@@ -1,4 +1,6 @@
 (function registerDuel(global) {
+  const TOKEN_CAP = 40;
+
   function randomFrom(list) {
     if (!Array.isArray(list) || !list.length) return null;
     return list[Math.floor(Math.random() * list.length)];
@@ -88,6 +90,10 @@
     return parts.join(" + ");
   }
 
+  function getFighterTokenCount(base) {
+    return base && Number.isFinite(base.tokenCount) ? base.tokenCount : 1;
+  }
+
   function buildFighter(card, side, slotIndex, lane, equipmentCard) {
     const base = global.TCGIdleData.getCreature(card.baseId);
     const equipmentBase = equipmentCard ? global.TCGIdleData.getEquipment(equipmentCard.baseId) : null;
@@ -97,11 +103,14 @@
       lane: lane === "backline" ? "backline" : "frontline",
       instanceId: card.instanceId || (side + "-" + card.baseId + "-" + Math.random()),
       baseId: card.baseId,
+      cardType: "creature",
+      seen: true,
       name: base ? base.name : card.baseId,
       tribe: base ? base.tribe : null,
-      damageProfile: normalizeDamageProfile(base, getDefaultCreatureBaseDamage(card.stats)),
       portrait: base ? base.portrait : "",
+      damageProfile: normalizeDamageProfile(base, getDefaultCreatureBaseDamage(card.stats)),
       stats: Object.assign({}, card.stats),
+      tokenCount: getFighterTokenCount(base),
       hpMax: card.stats.energy,
       hp: card.stats.energy,
       down: false,
@@ -110,6 +119,31 @@
       equipmentCard: equipmentCard || null,
       equipmentBase: equipmentBase,
     };
+  }
+
+  function buildSpellEntry(card, spellBase, side, index) {
+    if (!spellBase) return null;
+    return {
+      instanceId: card && card.instanceId ? card.instanceId : side + "-spell-" + spellBase.id + "-" + index,
+      baseId: spellBase.id,
+      cardType: "spell",
+      seen: true,
+      base: spellBase,
+      portrait: spellBase.portrait || "",
+      cooldownRemaining: 0,
+    };
+  }
+
+  function calculateTokenIncome(sideState) {
+    const alive = sideState.fighters.filter((fighter) => fighter.hp > 0);
+    const total = alive.reduce((sum, fighter) => sum + (fighter.tokenCount || 1), 0);
+    return Math.max(1, Math.round(total * 0.5));
+  }
+
+  function primeResources(sideState) {
+    sideState.tokenIncome = calculateTokenIncome(sideState);
+    sideState.tokens = Math.min(TOKEN_CAP, Math.max(5, sideState.tokenIncome * 2));
+    sideState.activeEffects = [];
   }
 
   function getPlayerSide(state) {
@@ -123,12 +157,22 @@
       return buildFighter(creature, "player", index, slot.lane, equipmentCard);
     }).filter(Boolean);
 
+    const spells = global.TCGIdleDeck.getSection(state, "spells")
+      .map((id, index) => {
+        const card = global.TCGIdleDeck.findCard(state, id);
+        return card ? buildSpellEntry(card, global.TCGIdleData.getSpell(card.baseId), "player", index) : null;
+      })
+      .filter(Boolean);
+
     return {
       side: "player",
       fighters: fighters,
       actions: global.TCGIdleDeck.getSection(state, "actions").map((id) => global.TCGIdleDeck.findCard(state, id)).filter(Boolean).map((card) => global.TCGIdleData.getAction(card.baseId)).filter(Boolean),
-      spells: global.TCGIdleDeck.getSection(state, "spells").map((id) => global.TCGIdleDeck.findCard(state, id)).filter(Boolean).map((card) => global.TCGIdleData.getSpell(card.baseId)).filter(Boolean),
+      spells: spells,
       locations: global.TCGIdleDeck.getSection(state, "locations").map((id) => global.TCGIdleDeck.findCard(state, id)).filter(Boolean).map((card) => global.TCGIdleData.getLocation(card.baseId)).filter(Boolean),
+      tokens: 0,
+      tokenIncome: 0,
+      activeEffects: [],
     };
   }
 
@@ -144,7 +188,7 @@
     const starter = (global.TCGIdleData.starterSpellDeck || []).slice();
     const shift = ((npc && npc.difficulty) || 1) - 1;
     return starter.slice(shift, shift + 3).concat(starter.slice(0, shift)).slice(0, 3)
-      .map((baseId) => global.TCGIdleData.getSpell(baseId))
+      .map((baseId, index) => buildSpellEntry({ instanceId: "npc-spell-" + npc.id + "-" + index, baseId: baseId }, global.TCGIdleData.getSpell(baseId), "enemy", index))
       .filter(Boolean);
   }
 
@@ -175,7 +219,15 @@
       actions: buildNpcActionDeck(npc),
       spells: buildNpcSpellDeck(npc),
       locations: zone ? [zone] : [],
+      tokens: 0,
+      tokenIncome: 0,
+      activeEffects: [],
     };
+  }
+
+  function matchesEffectTarget(effectState, fighter) {
+    if (!effectState.targetId) return true;
+    return effectState.targetId === fighter.instanceId;
   }
 
   function collectSourceEffects(fighter, sideState) {
@@ -184,11 +236,12 @@
     if (fighter.equipmentBase && Array.isArray(fighter.equipmentBase.duelModifiers)) {
       effects.push.apply(effects, cloneModifiers(fighter.equipmentBase.duelModifiers));
     }
-    sideState.spells.forEach((spell) => {
-      if (Array.isArray(spell.duelModifiers)) effects.push.apply(effects, cloneModifiers(spell.duelModifiers));
-    });
     sideState.locations.forEach((location) => {
       if (Array.isArray(location.duelModifiers)) effects.push.apply(effects, cloneModifiers(location.duelModifiers));
+    });
+    sideState.activeEffects.forEach((effectState) => {
+      if (!matchesEffectTarget(effectState, fighter)) return;
+      effects.push.apply(effects, cloneModifiers(effectState.modifiers));
     });
     return effects;
   }
@@ -247,6 +300,23 @@
     if (!alive.length) return null;
     const frontline = alive.filter((fighter) => fighter.lane === "frontline");
     return randomFrom(frontline.length ? frontline : alive);
+  }
+
+  function chooseDefender(sideState, preferredTargetId) {
+    const alive = sideState.fighters.filter((fighter) => fighter.hp > 0);
+    if (!alive.length) return null;
+    if (preferredTargetId) {
+      const preferred = alive.find((fighter) => fighter.instanceId === preferredTargetId);
+      if (preferred) return preferred;
+    }
+    const frontline = alive.filter((fighter) => fighter.lane === "frontline");
+    return randomFrom(frontline.length ? frontline : alive);
+  }
+
+  function getDefaultFocusId(sideState) {
+    const frontline = sideState.fighters.find((fighter) => fighter.hp > 0 && fighter.lane === "frontline");
+    const fallback = sideState.fighters.find((fighter) => fighter.hp > 0);
+    return frontline ? frontline.instanceId : (fallback ? fallback.instanceId : null);
   }
 
   function chooseAction(sideState) {
@@ -345,6 +415,83 @@
     return [global.TCGIdleRolling.rollEliteCard(reward.baseId, "special-duel")];
   }
 
+  function gainTokens(sideState) {
+    sideState.tokenIncome = calculateTokenIncome(sideState);
+    sideState.tokens = Math.min(TOKEN_CAP, sideState.tokens + sideState.tokenIncome);
+  }
+
+  function getSpellTargetType(spellBase) {
+    return spellBase && spellBase.targetType ? spellBase.targetType : "none";
+  }
+
+  function canCastSpell(sideState, spellEntry) {
+    if (!spellEntry || !spellEntry.base) return { ok: false, reason: "Magia indisponivel." };
+    if (spellEntry.cooldownRemaining > 0) return { ok: false, reason: "Magia em recarga." };
+    if (sideState.tokens < (spellEntry.base.tokenCost || 0)) return { ok: false, reason: "Tokens insuficientes." };
+    return { ok: true };
+  }
+
+  function buildSpellEffect(spellEntry, targetId) {
+    return {
+      id: spellEntry.instanceId + "-effect-" + Date.now(),
+      spellId: spellEntry.instanceId,
+      source: spellEntry.base.name,
+      targetId: targetId || null,
+      remainingTicks: Number.isFinite(spellEntry.base.durationTicks) ? spellEntry.base.durationTicks : 3,
+      modifiers: cloneModifiers(spellEntry.base.duelModifiers).map((modifier) => {
+        const next = Object.assign({}, modifier);
+        if (!next.source) next.source = spellEntry.base.name;
+        return next;
+      }),
+    };
+  }
+
+  function pushCombatLog(ctx, entry) {
+    ctx.log.push(entry);
+  }
+
+  function castSpell(ctx, sideState, spellEntry, targetId, actingSide) {
+    sideState.tokens -= spellEntry.base.tokenCost || 0;
+    spellEntry.cooldownRemaining = Number.isFinite(spellEntry.base.cooldownTicks) ? spellEntry.base.cooldownTicks : 3;
+    sideState.activeEffects.push(buildSpellEffect(spellEntry, targetId));
+    const target = targetId ? sideState.fighters.find((fighter) => fighter.instanceId === targetId) || ctx.enemySide.fighters.find((fighter) => fighter.instanceId === targetId) : null;
+    pushCombatLog(ctx, {
+      tick: ctx.tick,
+      kind: "spell",
+      attackerSide: actingSide,
+      text: spellEntry.base.name + (target ? " aplicada em " + target.name + "." : " ativada."),
+    });
+    return { ok: true, spell: spellEntry.base };
+  }
+
+  function ageSpellState(sideState) {
+    sideState.spells.forEach((spellEntry) => {
+      if (spellEntry.cooldownRemaining > 0) spellEntry.cooldownRemaining -= 1;
+    });
+    sideState.activeEffects = sideState.activeEffects
+      .map((effect) => Object.assign({}, effect, { remainingTicks: effect.remainingTicks - 1 }))
+      .filter((effect) => effect.remainingTicks > 0);
+  }
+
+  function autoCastEnemySpell(ctx) {
+    const sideState = ctx.enemySide;
+    const ready = sideState.spells.filter((spellEntry) => canCastSpell(sideState, spellEntry).ok);
+    if (!ready.length || Math.random() > 0.65) return;
+    const spellEntry = randomFrom(ready);
+    const targetType = getSpellTargetType(spellEntry.base);
+    let targetId = null;
+    if (targetType === "ally") {
+      const target = sideState.fighters.filter((fighter) => fighter.hp > 0).sort((a, b) => (a.hp / a.hpMax) - (b.hp / b.hpMax))[0];
+      if (!target) return;
+      targetId = target.instanceId;
+    } else if (targetType === "enemy") {
+      const target = chooseDefender(ctx.playerSide, null);
+      if (!target) return;
+      targetId = target.instanceId;
+    }
+    castSpell(ctx, sideState, spellEntry, targetId, "enemy");
+  }
+
   function startDuel(state, npcId) {
     const npc = global.TCGIdleData.getNpc(npcId);
     if (!npc) return { ok: false, reason: "NPC desconhecido." };
@@ -364,6 +511,8 @@
 
     const playerSide = getPlayerSide(state);
     const enemySide = getEnemySide(npc);
+    primeResources(playerSide);
+    primeResources(enemySide);
     applyStartOfBattleEffects(playerSide);
     applyStartOfBattleEffects(enemySide);
 
@@ -371,11 +520,14 @@
     state.duel.current = {
       npcId: npcId,
       tick: 0,
+      phase: "auto",
       playerSide: playerSide,
       enemySide: enemySide,
+      playerFocusId: getDefaultFocusId(enemySide),
       reservedSpecialCharge: Boolean(npc.special),
       difficulty: npc.difficulty,
       currentEngagement: null,
+      pendingInput: null,
       log: [{ tick: 0, kind: "setup", text: "Inicio do duelo contra " + npc.name + "." }],
       startedAt: Date.now(),
     };
@@ -386,39 +538,64 @@
   function fightOnce(ctx, actingSide, defendingSide) {
     const attacker = actingSide.fighter;
     const defender = defendingSide.fighter;
-    if (!attacker || !defender || attacker.hp <= 0 || defender.hp <= 0) return;
+    if (!attacker || !defender || attacker.hp <= 0 || defender.hp <= 0) return null;
 
     const action = chooseAction(actingSide.sideState);
     const attack = computeDamage(attacker, actingSide.sideState, defender, defendingSide.sideState, action);
     defender.hp = Math.max(0, defender.hp - attack.finalDamage);
-    ctx.log.push({
+    pushCombatLog(ctx, {
       tick: ctx.tick,
       kind: "attack",
       attackerSide: attacker.side,
-      text: attacker.name + " usa " + attack.actionName + " em " + defender.name + " (" + attack.finalDamage + " de dano, bruto " + attack.rawDamage + "; " + formatDamageBreakdown(attack.breakdown) + ")",
+      text: attacker.name + " usa " + attack.actionName + " em " + defender.name + " (" + attack.finalDamage + " de dano; " + formatDamageBreakdown(attack.breakdown) + ")",
     });
     attack.detailLogs.forEach((text) => {
-      ctx.log.push({ tick: ctx.tick, kind: "detail", attackerSide: attacker.side, text: text + "." });
+      pushCombatLog(ctx, { tick: ctx.tick, kind: "detail", attackerSide: attacker.side, text: text + "." });
     });
     if (defender.hp <= 0) {
       defender.down = true;
-      ctx.log.push({ tick: ctx.tick, kind: "ko", side: defender.side, text: defender.name + " foi destruido quando a Energia zerou." });
+      pushCombatLog(ctx, { tick: ctx.tick, kind: "ko", side: defender.side, text: defender.name + " foi destruido quando a Energia zerou." });
     }
     return action.name;
+  }
+
+  function ensurePlayerFocus(ctx) {
+    if (ctx.playerFocusId && ctx.enemySide.fighters.some((fighter) => fighter.instanceId === ctx.playerFocusId && fighter.hp > 0)) {
+      return;
+    }
+    ctx.playerFocusId = getDefaultFocusId(ctx.enemySide);
   }
 
   function tickDuel(state) {
     const ctx = state.duel.current;
     if (!ctx) return { ended: false };
+    if (ctx.pendingInput) {
+      ctx.phase = "targeting";
+      return { ended: false, paused: true };
+    }
+
+    const playerAlive = ctx.playerSide.fighters.some((fighter) => fighter.hp > 0);
+    const enemyAlive = ctx.enemySide.fighters.some((fighter) => fighter.hp > 0);
+    if (!playerAlive || !enemyAlive) return finishDuel(state);
+
+    ctx.phase = "resolving";
+    ctx.tick += 1;
+    gainTokens(ctx.playerSide);
+    gainTokens(ctx.enemySide);
+    autoCastEnemySpell(ctx);
+    ensurePlayerFocus(ctx);
 
     const player = chooseEngager(ctx.playerSide);
     const enemy = chooseEngager(ctx.enemySide);
-    if (!player || !enemy) return finishDuel(state);
+    const playerTarget = chooseDefender(ctx.enemySide, ctx.playerFocusId);
+    const enemyTarget = chooseDefender(ctx.playerSide, null);
+    if (!player || !enemy || !playerTarget || !enemyTarget) return finishDuel(state);
 
-    ctx.tick += 1;
     ctx.currentEngagement = {
       playerId: player.instanceId,
       enemyId: enemy.instanceId,
+      playerTargetId: playerTarget.instanceId,
+      enemyTargetId: enemyTarget.instanceId,
       playerLane: player.lane,
       enemyLane: enemy.lane,
       playerAction: null,
@@ -427,24 +604,98 @@
 
     const playerInitiative = player.stats.speed + Math.random() * 8;
     const enemyInitiative = enemy.stats.speed + Math.random() * 8;
-    const first = playerInitiative >= enemyInitiative
-      ? [{ fighter: player, sideState: ctx.playerSide }, { fighter: enemy, sideState: ctx.enemySide }]
-      : [{ fighter: enemy, sideState: ctx.enemySide }, { fighter: player, sideState: ctx.playerSide }];
+    const playerActsFirst = playerInitiative >= enemyInitiative;
 
-    first.forEach((acting, index) => {
-      const defending = first[1 - index];
-      const actionName = fightOnce(ctx, acting, defending);
-      if (!actionName) return;
-      if (acting.fighter.side === "player") ctx.currentEngagement.playerAction = actionName;
-      else ctx.currentEngagement.enemyAction = actionName;
-    });
+    if (playerActsFirst) {
+      ctx.currentEngagement.playerAction = fightOnce(ctx, { fighter: player, sideState: ctx.playerSide }, { fighter: playerTarget, sideState: ctx.enemySide });
+      const enemyCounterTarget = chooseDefender(ctx.playerSide, null);
+      if (enemy.hp > 0 && enemyCounterTarget) {
+        ctx.currentEngagement.enemyAction = fightOnce(ctx, { fighter: enemy, sideState: ctx.enemySide }, { fighter: enemyCounterTarget, sideState: ctx.playerSide });
+      }
+    } else {
+      ctx.currentEngagement.enemyAction = fightOnce(ctx, { fighter: enemy, sideState: ctx.enemySide }, { fighter: enemyTarget, sideState: ctx.playerSide });
+      const playerCounterTarget = chooseDefender(ctx.enemySide, ctx.playerFocusId);
+      if (player.hp > 0 && playerCounterTarget) {
+        ctx.currentEngagement.playerAction = fightOnce(ctx, { fighter: player, sideState: ctx.playerSide }, { fighter: playerCounterTarget, sideState: ctx.enemySide });
+      }
+    }
 
-    const playerAlive = ctx.playerSide.fighters.some((fighter) => fighter.hp > 0);
-    const enemyAlive = ctx.enemySide.fighters.some((fighter) => fighter.hp > 0);
-    if (!playerAlive || !enemyAlive) {
+    ageSpellState(ctx.playerSide);
+    ageSpellState(ctx.enemySide);
+    ensurePlayerFocus(ctx);
+    ctx.phase = "auto";
+
+    const nextPlayerAlive = ctx.playerSide.fighters.some((fighter) => fighter.hp > 0);
+    const nextEnemyAlive = ctx.enemySide.fighters.some((fighter) => fighter.hp > 0);
+    if (!nextPlayerAlive || !nextEnemyAlive) {
       return finishDuel(state);
     }
     return { ended: false };
+  }
+
+  function findSpellEntry(sideState, spellInstanceId) {
+    return sideState.spells.find((spellEntry) => spellEntry.instanceId === spellInstanceId) || null;
+  }
+
+  function queuePlayerSpell(state, spellInstanceId) {
+    const ctx = state.duel.current;
+    if (!ctx || state.duel.status !== "running") return { ok: false, reason: "Nenhum duelo em andamento." };
+    const spellEntry = findSpellEntry(ctx.playerSide, spellInstanceId);
+    const check = canCastSpell(ctx.playerSide, spellEntry);
+    if (!check.ok) return check;
+    const targetType = getSpellTargetType(spellEntry.base);
+    if (targetType === "none") {
+      castSpell(ctx, ctx.playerSide, spellEntry, null, "player");
+      ctx.phase = "auto";
+      return { ok: true, cast: true };
+    }
+    ctx.pendingInput = {
+      kind: "spell-target",
+      spellInstanceId: spellInstanceId,
+      targetType: targetType,
+    };
+    ctx.phase = "targeting";
+    return { ok: true, pending: true };
+  }
+
+  function choosePendingTarget(state, targetId) {
+    const ctx = state.duel.current;
+    if (!ctx || !ctx.pendingInput) return { ok: false, reason: "Nenhuma escolha pendente." };
+    const pending = ctx.pendingInput;
+    const spellEntry = findSpellEntry(ctx.playerSide, pending.spellInstanceId);
+    const check = canCastSpell(ctx.playerSide, spellEntry);
+    if (!check.ok) return check;
+
+    let target = null;
+    if (pending.targetType === "ally") {
+      target = ctx.playerSide.fighters.find((fighter) => fighter.instanceId === targetId && fighter.hp > 0) || null;
+    } else if (pending.targetType === "enemy") {
+      target = ctx.enemySide.fighters.find((fighter) => fighter.instanceId === targetId && fighter.hp > 0) || null;
+    }
+    if (!target) return { ok: false, reason: "Alvo invalido." };
+
+    castSpell(ctx, ctx.playerSide, spellEntry, target.instanceId, "player");
+    ctx.pendingInput = null;
+    ctx.phase = "auto";
+    return { ok: true, cast: true, spell: spellEntry.base, target: target };
+  }
+
+  function cancelPendingInput(state) {
+    const ctx = state.duel.current;
+    if (!ctx) return { ok: false };
+    ctx.pendingInput = null;
+    ctx.phase = "auto";
+    return { ok: true };
+  }
+
+  function setPlayerFocus(state, targetId) {
+    const ctx = state.duel.current;
+    if (!ctx || state.duel.status !== "running") return { ok: false, reason: "Nenhum duelo em andamento." };
+    const target = ctx.enemySide.fighters.find((fighter) => fighter.instanceId === targetId && fighter.hp > 0);
+    if (!target) return { ok: false, reason: "Alvo indisponivel." };
+    ctx.playerFocusId = target.instanceId;
+    pushCombatLog(ctx, { tick: ctx.tick, kind: "focus", attackerSide: "player", text: "Foco ajustado para " + target.name + "." });
+    return { ok: true, target: target };
   }
 
   function finishDuel(state) {
@@ -471,11 +722,11 @@
           specialUnlocked = true;
         }
       }
-      ctx.log.push({ tick: ctx.tick, kind: "result", text: "Vitoria conquistada." });
+      pushCombatLog(ctx, { tick: ctx.tick, kind: "result", text: "Vitoria conquistada." });
     } else {
       state.progress.duelsLost += 1;
       if (!npc || !npc.special) state.progress.duelStreaks[difficultyKey] = 0;
-      ctx.log.push({ tick: ctx.tick, kind: "result", text: npc && npc.special ? "Derrota na prova especial." : "Derrota registrada." });
+      pushCombatLog(ctx, { tick: ctx.tick, kind: "result", text: npc && npc.special ? "Derrota na prova especial." : "Derrota registrada." });
     }
 
     state.duel.lastResult = {
@@ -504,6 +755,10 @@
   global.TCGIdleDuel = {
     startDuel: startDuel,
     tickDuel: tickDuel,
+    queuePlayerSpell: queuePlayerSpell,
+    choosePendingTarget: choosePendingTarget,
+    cancelPendingInput: cancelPendingInput,
+    setPlayerFocus: setPlayerFocus,
     finishDuel: finishDuel,
     refundInterruptedSpecialCharge: refundInterruptedSpecialCharge,
     resetDuel: resetDuel,
