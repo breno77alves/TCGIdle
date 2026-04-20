@@ -14,41 +14,6 @@
     ctx.requestRender();
   }
 
-  function renderThumb(doc, image, alt, className) {
-    const wrap = doc.createElement("div");
-    wrap.className = className;
-    if (image) {
-      const img = doc.createElement("img");
-      img.src = image;
-      img.alt = alt;
-      img.loading = "lazy";
-      wrap.appendChild(img);
-    }
-    return wrap;
-  }
-
-  function getCardImage(card) {
-    if (!card) return "";
-    if (card.cardType === "creature") {
-      const base = global.TCGIdleData.getCreature(card.baseId);
-      return base ? base.portrait : "";
-    }
-    if (card.cardType === "location") {
-      const base = global.TCGIdleData.getLocation(card.baseId);
-      return base ? base.portrait : "";
-    }
-    if (card.cardType === "action") {
-      const base = global.TCGIdleData.getAction(card.baseId);
-      return base ? base.portrait : "";
-    }
-    if (card.cardType === "equipment") {
-      const base = global.TCGIdleData.getEquipment(card.baseId);
-      return base ? base.portrait : "";
-    }
-    const spell = global.TCGIdleData.getSpell(card.baseId);
-    return spell ? spell.portrait : "";
-  }
-
   function getCardTitle(card) {
     if (!card) return "Vazio";
     if (card.cardType === "creature") {
@@ -94,37 +59,6 @@
     return spell ? spell.role : "Magia";
   }
 
-  function renderSlotStats(card) {
-    if (!card || card.cardType !== "creature") return "";
-    return '<div class="slot-stats">' +
-      "<span>CR <b>" + card.stats.courage + "</b></span>" +
-      "<span>PO <b>" + card.stats.power + "</b></span>" +
-      "<span>SA <b>" + card.stats.wisdom + "</b></span>" +
-      "<span>VL <b>" + card.stats.speed + "</b></span>" +
-      '<span class="slot-energy">EN <b>' + card.stats.energy + "</b></span>" +
-      "</div>";
-  }
-
-  function renderSlotStatsNode(doc, card, extraClass) {
-    const wrap = doc.createElement("div");
-    wrap.innerHTML = renderSlotStats(card);
-    const node = wrap.firstChild;
-    if (node && extraClass) node.classList.add(extraClass);
-    return node;
-  }
-
-  function renderDeckDamageSummary(doc, card, options) {
-    const model = global.TCGIdleCardRender.getCardDisplayModel(card);
-    const wrap = doc.createElement("div");
-    wrap.className = "deck-damage-summary";
-    wrap.appendChild(global.TCGIdleCardRender.renderDamageStack(doc, model.damageEntries, {
-      compact: true,
-      limit: options && options.limit ? options.limit : 4,
-      emptyLabel: "Sem dano",
-    }));
-    return wrap;
-  }
-
   function renderDeckEffectSummary(doc, card) {
     const model = global.TCGIdleCardRender.getCardDisplayModel(card);
     if (!model.effectText) return null;
@@ -132,15 +66,6 @@
     text.className = "deck-effect-summary";
     text.textContent = model.effectText;
     return text;
-  }
-
-  function renderDeckTokenSummary(doc, card) {
-    const model = global.TCGIdleCardRender.getCardDisplayModel(card);
-    if (!model.tokenLabel) return null;
-    const token = doc.createElement("span");
-    token.className = "deck-token-summary";
-    token.textContent = model.tokenLabel;
-    return token;
   }
 
   function renderEquipmentAttachment(doc, state, slotIndex, ctx) {
@@ -190,6 +115,17 @@
 
     wrap.appendChild(controls);
     return wrap;
+  }
+
+  function bindSurfaceAction(node, action) {
+    node.tabIndex = 0;
+    node.setAttribute("role", "button");
+    node.addEventListener("click", action);
+    node.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      action(event);
+    });
   }
 
   function getSubtypeLabel(card) {
@@ -257,43 +193,53 @@
     sectionCards.forEach((instanceId, index) => {
       const card = instanceId ? global.TCGIdleDeck.findCard(state, instanceId) : null;
       const creatureSlot = sectionName === "creatures" ? global.TCGIdleDeck.getCreatureSlot(state, index) : null;
-      const slot = ctx.doc.createElement("button");
-      slot.type = "button";
-      slot.className = "deck-slot";
+      const slot = ctx.doc.createElement("article");
+      slot.className = "deck-slot-shell";
       slot.dataset.section = sectionName;
       slot.dataset.filled = String(Boolean(card));
 
+      const slotHeader = ctx.doc.createElement("div");
+      slotHeader.className = "deck-slot-header";
+      slotHeader.innerHTML =
+        '<span class="slot-number">' + meta.title + " " + (index + 1) + "</span>" +
+        '<span class="slot-tribe">' + (card ? getCardSubtitle(card) : "Espaco livre") + "</span>";
+      slot.appendChild(slotHeader);
+
       if (card) {
-        slot.appendChild(renderThumb(ctx.doc, getCardImage(card), getCardTitle(card), "deck-slot-portrait"));
-        const copy = ctx.doc.createElement("div");
-        copy.className = "deck-slot-copy";
-        copy.innerHTML =
-          '<span class="slot-number">' + meta.title + " " + (index + 1) + "</span>" +
-          "<strong>" + getCardTitle(card) + "</strong>" +
-          '<span class="slot-tribe">' + getCardSubtitle(card) + "</span>" +
-          (creatureSlot ? '<span class="slot-lane-badge" data-lane="' + creatureSlot.lane + '">' + (creatureSlot.lane === "backline" ? "Backline" : "Frontline") + "</span>" : "");
-        if (card.cardType === "creature" || card.cardType === "action") {
-          copy.appendChild(renderDeckDamageSummary(ctx.doc, card, { limit: 5 }));
-        }
-        if (card.cardType === "creature") {
-          copy.appendChild(renderSlotStatsNode(ctx.doc, card));
-          const token = renderDeckTokenSummary(ctx.doc, card);
-          if (token) copy.appendChild(token);
-          copy.appendChild(renderEquipmentAttachment(ctx.doc, state, index, ctx));
-        } else {
-          const effect = renderDeckEffectSummary(ctx.doc, card);
-          if (effect) copy.appendChild(effect);
-          const token = renderDeckTokenSummary(ctx.doc, card);
-          if (token) copy.appendChild(token);
-        }
-        slot.appendChild(copy);
+        const surface = global.TCGIdleCardRender.renderCard(ctx.doc, card);
+        surface.classList.add("deck-slot-card");
+        bindSurfaceAction(surface, () => openPicker(sectionName, index, ctx));
+        slot.appendChild(surface);
       } else {
-        slot.innerHTML =
-          '<span class="slot-number">' + meta.title + " " + (index + 1) + "</span>" +
+        const empty = ctx.doc.createElement("div");
+        empty.className = "deck-empty-slot";
+        empty.innerHTML =
           "<strong>Vazio</strong>" +
-          '<span class="slot-tribe">Toque para designar</span>' +
-          (creatureSlot ? '<span class="slot-lane-badge" data-lane="' + creatureSlot.lane + '">' + (creatureSlot.lane === "backline" ? "Backline" : "Frontline") + "</span>" : "");
+          "<span>Toque para designar uma carta neste espaco.</span>";
+        bindSurfaceAction(empty, () => openPicker(sectionName, index, ctx));
+        slot.appendChild(empty);
       }
+
+      const controls = ctx.doc.createElement("div");
+      controls.className = "deck-slot-controls";
+
+      const assign = ctx.doc.createElement("button");
+      assign.type = "button";
+      assign.className = "mini-action";
+      assign.textContent = card ? "Trocar carta" : "Designar carta";
+      assign.addEventListener("click", () => openPicker(sectionName, index, ctx));
+      controls.appendChild(assign);
+
+      if (card) {
+        const clear = ctx.doc.createElement("button");
+        clear.type = "button";
+        clear.className = "mini-action mini-action-danger";
+        clear.textContent = "Remover";
+        clear.addEventListener("click", () => ctx.onClearDeckCard(sectionName, index));
+        controls.appendChild(clear);
+      }
+
+      slot.appendChild(controls);
 
       if (creatureSlot) {
         const laneToggle = ctx.doc.createElement("div");
@@ -304,16 +250,12 @@
           laneButton.className = "lane-button";
           if (creatureSlot.lane === lane) laneButton.dataset.active = "true";
           laneButton.textContent = lane === "frontline" ? "Frontline" : "Backline";
-          laneButton.addEventListener("click", (event) => {
-            event.stopPropagation();
-            ctx.onSetCreatureLane(index, lane);
-          });
+          laneButton.addEventListener("click", () => ctx.onSetCreatureLane(index, lane));
           laneToggle.appendChild(laneButton);
         });
         slot.appendChild(laneToggle);
+        slot.appendChild(renderEquipmentAttachment(ctx.doc, state, index, ctx));
       }
-
-      slot.addEventListener("click", () => openPicker(sectionName, index, ctx));
       board.appendChild(slot);
     });
 
@@ -409,26 +351,11 @@
       option.className = "picker-option";
       option.dataset.disabled = String(!check.ok);
       option.disabled = !check.ok;
-      option.appendChild(renderThumb(ctx.doc, getCardImage(card), getCardTitle(card), "picker-option-portrait"));
+      option.appendChild(global.TCGIdleCardRender.renderCard(ctx.doc, card, { variant: "mini" }));
 
       const copy = ctx.doc.createElement("div");
-      copy.className = "picker-option-copy";
-      copy.innerHTML =
-        "<strong>" + getCardTitle(card) + "</strong>" +
-        "<span>" + getCardSubtitle(card) + "</span>";
-      if (card.cardType === "creature" || card.cardType === "action") {
-        const damage = renderDeckDamageSummary(ctx.doc, card, { limit: 5 });
-        damage.classList.add("picker-option-damage");
-        copy.appendChild(damage);
-      }
-      if (card.cardType === "creature") {
-        copy.appendChild(renderSlotStatsNode(ctx.doc, card, "picker-option-stats"));
-      } else {
-        const effect = renderDeckEffectSummary(ctx.doc, card);
-        if (effect) copy.appendChild(effect);
-        const token = renderDeckTokenSummary(ctx.doc, card);
-        if (token) copy.appendChild(token);
-      }
+      copy.className = "picker-option-meta";
+      copy.innerHTML = "<span>" + getCardSubtitle(card) + "</span>";
       if (!check.ok) {
         const reason = ctx.doc.createElement("em");
         reason.textContent = check.reason;

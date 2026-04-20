@@ -84,7 +84,7 @@
     const grid = ctx.doc.createElement("div");
     grid.className = "card-grid catalog-grid";
     groups.forEach((group) => {
-      const node = global.TCGIdleCardRender.renderCard(ctx.doc, group.display, { variant: "catalog" });
+      const node = global.TCGIdleCardRender.renderCard(ctx.doc, group.display, { variant: "mini" });
       const info = infoForGroup(group);
       node.classList.add("catalog-entry");
       node.style.setProperty("--catalog-accent", info.accent || "#e0b763");
@@ -166,11 +166,11 @@
     summary.className = "archive-summary";
     summary.innerHTML =
       '<p class="eyebrow">Arquivo de campo</p>' +
-      '<h3>Pokedex do tomo</h3>' +
-      '<p class="flavor">Cada especie aparece uma vez no catalogo. Ao abrir um registro, voce ve todas as copias que ja escaneou daquela carta.</p>';
+      '<h3>Catalogo do tomo</h3>' +
+      '<p class="flavor">Cada carta aparece uma vez no catalogo. Ao abrir um registro, voce ve todas as copias ja escaneadas daquela entrada.</p>';
     root.appendChild(summary);
 
-    renderGroupShelf(root, ctx, "Criaturas registradas", "Pokedex", "Cada criatura aparece como uma entrada unica do arquivo.", creatureGroups, "creature");
+    renderGroupShelf(root, ctx, "Criaturas registradas", "Arquivo", "Cada criatura aparece como uma entrada unica do arquivo.", creatureGroups, "creature");
     renderGroupShelf(root, ctx, "Locais registrados", "Mapa", "Locais conhecidos pelo duelista e suas rotas de expansao.", locationGroups, "location");
     renderGroupShelf(root, ctx, "Acoes registradas", "Tatica", "Cartas de acao que compoem a malha automatica do duelo.", actionGroups, "action");
     renderGroupShelf(root, ctx, "Magias registradas", "Itens ativos", "Ferramentas taticas do jogador para uso manual na arena.", spellGroups, "spell");

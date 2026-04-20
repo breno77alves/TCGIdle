@@ -33,6 +33,14 @@
   box-shadow: 0 24px 40px -20px rgba(0, 0, 0, 0.95), 0 0 0 1px var(--tribe-accent) inset;
 }
 
+.card-token[data-variant="mini"] {
+  border-radius: 14px;
+}
+
+.card-token[data-variant="mini"]:hover {
+  transform: translateY(-2px);
+}
+
 .card-token[data-unseen="true"]::after {
   content: "NOVO";
   position: absolute;
@@ -54,6 +62,10 @@
   background: radial-gradient(circle at 50% 30%, var(--tribe-soft), rgba(11, 9, 7, 0.84) 75%);
   overflow: hidden;
   isolation: isolate;
+}
+
+.card-token[data-variant="mini"] .card-frame {
+  aspect-ratio: 5 / 7;
 }
 
 .card-topline {
@@ -122,6 +134,29 @@
   background: linear-gradient(180deg, rgba(18, 15, 12, 0.42), rgba(18, 15, 12, 0.86));
   border: 1px solid rgba(242, 231, 204, 0.16);
   backdrop-filter: blur(8px);
+}
+
+.card-token[data-variant="mini"] .card-topline,
+.card-token[data-variant="mini"] .card-body,
+.card-token[data-variant="mini"] .card-title-subline {
+  display: none;
+}
+
+.card-token[data-variant="mini"] .card-titleplate {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0;
+  padding: 12px 12px 14px;
+  border: none;
+  background: linear-gradient(180deg, transparent, rgba(10, 8, 6, 0.92) 38%, rgba(10, 8, 6, 0.98));
+  backdrop-filter: none;
+}
+
+.card-token[data-variant="mini"] .card-name {
+  font-size: 0.84rem;
+  line-height: 1.1;
+  letter-spacing: 0.1em;
 }
 
 .card-body {

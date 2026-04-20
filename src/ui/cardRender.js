@@ -16,8 +16,6 @@
   };
 
   const TAG_LABELS = {
-    frontline: "Frontline",
-    backline: "Backline",
     guardian: "Guardiao",
     skirmisher: "Vanguarda",
     bruiser: "Colosso",
@@ -175,12 +173,6 @@
     return TAG_LABELS[nonLane] || nonLane || "";
   }
 
-  function getLaneLabel(info) {
-    if (!info.meta || !Array.isArray(info.meta.combatTags) || !info.meta.combatTags.length) return "";
-    const lane = info.meta.combatTags.find((tag) => tag === "frontline" || tag === "backline");
-    return TAG_LABELS[lane] || lane || "";
-  }
-
   function getToplineLeft(card, info) {
     if (card.cardType === "creature" && info.tribe) return info.tribe.name;
     return getCardTypeMeta(card.cardType).family;
@@ -188,7 +180,7 @@
 
   function getToplineRight(card, info) {
     if (card.cardType === "creature") {
-      return getPrimaryRole(info) || getLaneLabel(info) || getCardTypeMeta(card.cardType).label;
+      return getPrimaryRole(info) || getCardTypeMeta(card.cardType).label;
     }
     if (card.cardType === "location" && info.meta && info.meta.rarityLabel) {
       return info.meta.rarityLabel;
@@ -199,14 +191,13 @@
   function getTypeLine(card, info) {
     const parts = [getCardTypeMeta(card.cardType).label];
     if (card.cardType === "creature" && info.tribe) parts.push(info.tribe.name);
-    if (card.cardType === "creature" && getLaneLabel(info)) parts.push(getLaneLabel(info));
     if (card.cardType === "location" && info.meta && info.meta.rarityLabel) parts.push(info.meta.rarityLabel);
     return parts.join(" • ");
   }
 
   function getTitleSubline(card, info) {
     if (card.cardType === "creature") {
-      return [getLaneLabel(info), getPrimaryRole(info)].filter(Boolean).join(" • ") || getTypeLine(card, info);
+      return getPrimaryRole(info) || getTypeLine(card, info);
     }
     if (card.cardType === "location" && info.meta && info.meta.rarityLabel) {
       return [getCardTypeMeta(card.cardType).label, info.meta.rarityLabel].join(" • ");
@@ -310,6 +301,54 @@
     return footer;
   }
 
+  function renderMiniCard(doc, card, model, info) {
+    const el = doc.createElement("article");
+    el.className = "card-token";
+    el.dataset.instanceId = card.instanceId;
+    el.dataset.cardType = card.cardType || "creature";
+    el.dataset.variant = "mini";
+
+    if (info.tribe) {
+      el.dataset.tribe = info.tribe.id;
+      el.style.setProperty("--tribe-accent", info.tribe.accent);
+      el.style.setProperty("--tribe-soft", info.tribe.accentSoft);
+    } else if (card.cardType === "action") {
+      el.style.setProperty("--tribe-accent", "#d66a52");
+      el.style.setProperty("--tribe-soft", "rgba(214, 106, 82, 0.2)");
+    } else if (card.cardType === "spell") {
+      el.style.setProperty("--tribe-accent", "#8f9af4");
+      el.style.setProperty("--tribe-soft", "rgba(143, 154, 244, 0.2)");
+    } else {
+      el.style.setProperty("--tribe-accent", "#8DD4C4");
+      el.style.setProperty("--tribe-soft", "rgba(72, 141, 141, 0.24)");
+    }
+
+    if (!card.seen) {
+      el.dataset.unseen = "true";
+    }
+
+    const frame = doc.createElement("div");
+    frame.className = "card-frame";
+
+    const portrait = doc.createElement("div");
+    portrait.className = "card-portrait";
+    if (info.portrait) {
+      const img = doc.createElement("img");
+      img.src = info.portrait;
+      img.alt = model.title;
+      img.loading = "lazy";
+      portrait.appendChild(img);
+    }
+
+    const titlePlate = doc.createElement("div");
+    titlePlate.className = "card-titleplate";
+    titlePlate.innerHTML = '<h3 class="card-name">' + model.title + "</h3>";
+
+    frame.append(portrait, titlePlate);
+    el.appendChild(frame);
+    return el;
+  }
+
   function getCardDisplayModel(card) {
     const info = resolveCardBase(card);
     return {
@@ -325,6 +364,10 @@
     options = options || {};
     const model = getCardDisplayModel(card);
     const info = model.info;
+
+    if (options.variant === "mini") {
+      return renderMiniCard(doc, card, model, info);
+    }
 
     const el = doc.createElement("article");
     el.className = "card-token";
@@ -399,7 +442,7 @@
       right.classList.add("card-rail-right");
       layout.append(left, center, right);
       body.appendChild(layout);
-      body.appendChild(renderFooterStrip(doc, [model.tokenLabel, getLaneLabel(info), getPrimaryRole(info)]));
+      body.appendChild(renderFooterStrip(doc, [model.tokenLabel, getPrimaryRole(info)]));
     } else if (card.cardType === "action") {
       const left = doc.createElement("aside");
       left.className = "card-side-panel card-rail-left card-damage-panel";
