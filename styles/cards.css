@@ -256,6 +256,69 @@
   margin-top: 4px;
 }
 
+.action-damage-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.action-damage-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(242, 231, 204, 0.52);
+}
+
+.action-damage-chip {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 231, 204, 0.18);
+  background: rgba(242, 231, 204, 0.06);
+  color: var(--bone);
+}
+
+.action-damage-chip[data-tone="base"] {
+  border-color: rgba(242, 231, 204, 0.24);
+  color: rgba(242, 231, 204, 0.92);
+}
+
+.action-damage-chip[data-tone="cosmic"] {
+  border-color: rgba(146, 181, 255, 0.42);
+  color: #b9cbff;
+  background: rgba(105, 126, 255, 0.12);
+}
+
+.action-damage-chip[data-tone="elemental"] {
+  border-color: rgba(104, 205, 190, 0.38);
+  color: #8dddcf;
+  background: rgba(74, 156, 142, 0.12);
+}
+
+.action-damage-chip[data-tone="magic"] {
+  border-color: rgba(212, 158, 255, 0.38);
+  color: #dab7ff;
+  background: rgba(145, 84, 214, 0.12);
+}
+
+.action-damage-chip[data-tone="true"] {
+  border-color: rgba(255, 112, 112, 0.42);
+  color: #ff8e8e;
+  background: rgba(180, 36, 36, 0.14);
+}
+
+.action-damage-chip[data-tone="meta"] {
+  border-color: rgba(214, 106, 82, 0.28);
+  color: #e7b49c;
+  background: rgba(214, 106, 82, 0.08);
+}
+
 .location-chip {
   font-family: var(--font-mono);
   font-size: 0.66rem;

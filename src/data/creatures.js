@@ -8,6 +8,10 @@
       combatTags: ["frontline", "guardian"],
       portrait: "Arte/ArtWork/Champion/Belmon.png",
       passives: [{ trigger: "onDefend", lane: "frontline", flatMitigation: 3, source: "Juramento Inquebravel" }],
+      damageProfile: {
+        base: 4,
+        true: 1,
+      },
       tagline: "Cavaleiro solar de juramento inquebrável.",
       ranges: {
         courage: [85, 125],
@@ -25,6 +29,10 @@
       combatTags: ["frontline", "skirmisher"],
       portrait: "Arte/ArtWork/Champion/Hirum.png",
       passives: [{ trigger: "onAttack", statScale: [{ stat: "speed", ratio: 0.05 }], source: "Passo do Sentinela" }],
+      damageProfile: {
+        base: 4,
+        elemental: [{ element: "air", amount: 3 }],
+      },
       tagline: "Sentinela das colinas ao amanhecer.",
       ranges: {
         courage: [80, 120],
@@ -42,6 +50,10 @@
       combatTags: ["frontline", "bruiser"],
       portrait: "Arte/ArtWork/Champion/Grimodari.png",
       passives: [{ trigger: "onAttack", statScale: [{ stat: "power", ratio: 0.06 }], source: "Pressao de Aco" }],
+      damageProfile: {
+        base: 5,
+        elemental: [{ element: "earth", amount: 2 }],
+      },
       tagline: "Colosso de ferro negro forjado em câmaras profundas.",
       ranges: {
         courage: [45, 70],
@@ -59,6 +71,11 @@
       combatTags: ["frontline", "berserker"],
       portrait: "Arte/ArtWork/Champion/Ygar.png",
       passives: [{ trigger: "onAttack", flatDamage: 2, source: "Fornalha Interna" }],
+      damageProfile: {
+        base: 4,
+        elemental: [{ element: "fire", amount: 3 }],
+        true: 1,
+      },
       tagline: "Bruto que canaliza fornalhas subterrâneas.",
       ranges: {
         courage: [50, 75],
@@ -76,6 +93,11 @@
       combatTags: ["backline", "assassin"],
       portrait: "Arte/ArtWork/Champion/Kirr.png",
       passives: [{ trigger: "onAttack", lane: "backline", statScale: [{ stat: "speed", ratio: 0.07 }], source: "Mapa de Vento" }],
+      damageProfile: {
+        base: 3,
+        elemental: [{ element: "air", amount: 2 }],
+        cosmic: 1,
+      },
       tagline: "Batedor que lê o vento como mapa.",
       ranges: {
         courage: [55, 80],
@@ -93,6 +115,11 @@
       combatTags: ["backline", "support"],
       portrait: "Arte/ArtWork/Champion/Samish.png",
       passives: [{ trigger: "onAttack", lane: "backline", statScale: [{ stat: "wisdom", ratio: 0.08 }], source: "Memoria Coletiva" }],
+      damageProfile: {
+        base: 3,
+        elemental: [{ element: "water", amount: 2 }],
+        magic: 3,
+      },
       tagline: "Arquivista da colmeia, memória coletiva da tribo.",
       ranges: {
         courage: [40, 65],

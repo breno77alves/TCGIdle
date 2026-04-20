@@ -146,6 +146,75 @@
     };
   }
 
+  function getDamageProfile(meta) {
+    const profile = meta && meta.damageProfile ? meta.damageProfile : meta || {};
+    const elemental = [];
+    const rawElemental = profile.elemental || meta && meta.elementalDamage || [];
+    if (Array.isArray(rawElemental)) {
+      rawElemental.forEach((entry) => {
+        if (!entry || !entry.element) return;
+        elemental.push({
+          element: entry.element,
+          amount: Number.isFinite(entry.amount) ? entry.amount : (Number.isFinite(entry.damage) ? entry.damage : 0),
+        });
+      });
+    }
+    return {
+      base: Number.isFinite(profile.base) ? profile.base : (Number.isFinite(meta && meta.baseDamage) ? meta.baseDamage : 0),
+      cosmic: Number.isFinite(profile.cosmic) ? profile.cosmic : (Number.isFinite(meta && meta.cosmicDamage) ? meta.cosmicDamage : 0),
+      magic: Number.isFinite(profile.magic) ? profile.magic : (Number.isFinite(meta && meta.magicDamage) ? meta.magicDamage : 0),
+      true: Number.isFinite(profile.true) ? profile.true : (Number.isFinite(meta && meta.trueDamage) ? meta.trueDamage : 0),
+      elemental: elemental.filter((entry) => entry.amount > 0),
+    };
+  }
+
+  function renderActionDamageStrip(doc, action) {
+    const profile = getDamageProfile(action);
+    const wrap = doc.createElement("div");
+    wrap.className = "action-damage-strip";
+
+    const label = doc.createElement("span");
+    label.className = "action-damage-label";
+    label.textContent = "Dano";
+    wrap.appendChild(label);
+
+    if (profile.base > 0) {
+      wrap.appendChild(renderActionDamageChip(doc, "base", "Base " + profile.base, "Dano base incondicional"));
+    }
+    if (profile.cosmic > 0) {
+      wrap.appendChild(renderActionDamageChip(doc, "cosmic", "Cos " + profile.cosmic, "Dano cosmico"));
+    }
+    if (profile.magic > 0) {
+      wrap.appendChild(renderActionDamageChip(doc, "magic", "Mag " + profile.magic, "Dano magico"));
+    }
+    if (profile.true > 0) {
+      wrap.appendChild(renderActionDamageChip(doc, "true", "Ver " + profile.true, "Dano verdadeiro"));
+    }
+    profile.elemental.forEach((entry) => {
+      wrap.appendChild(renderActionDamageChip(doc, "elemental", getElementDamageLabel(entry), "Dano elemental " + entry.element + " +" + entry.amount));
+    });
+    return wrap;
+  }
+
+  function renderActionDamageChip(doc, tone, text, title) {
+    const chip = doc.createElement("span");
+    chip.className = "action-damage-chip";
+    chip.dataset.tone = tone;
+    chip.textContent = text;
+    chip.title = title;
+    return chip;
+  }
+
+  function getElementDamageLabel(entry) {
+    const labels = {
+      fire: "Ele fogo ",
+      water: "Ele agua ",
+      earth: "Ele terra ",
+      air: "Ele ar ",
+    };
+    return (labels[entry.element] || ("Ele " + entry.element + " ")) + entry.amount;
+  }
+
   function renderMetaChips(doc, card, info) {
     const wrap = doc.createElement("div");
     wrap.className = "location-highlights";
@@ -155,7 +224,13 @@
         '<span class="location-chip">Duracao: ' + Math.round(info.meta.durationMs / 1000) + "s</span>";
       return wrap;
     }
-    if ((card.cardType === "action" || card.cardType === "spell" || card.cardType === "equipment") && info.meta) {
+    if (card.cardType === "action" && info.meta) {
+      wrap.appendChild(renderActionDamageStrip(doc, info.meta));
+      wrap.appendChild(renderActionDamageChip(doc, "meta", info.badge, "Tipo de carta"));
+      wrap.appendChild(renderActionDamageChip(doc, "meta", info.label, "Papel tatico"));
+      return wrap;
+    }
+    if ((card.cardType === "spell" || card.cardType === "equipment") && info.meta) {
       wrap.innerHTML =
         '<span class="location-chip">' + info.badge + "</span>" +
         '<span class="location-chip">' + info.label + "</span>";
