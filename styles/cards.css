@@ -275,6 +275,15 @@
   border-color: rgba(242, 231, 204, 0.22);
 }
 
+.damage-chip[data-active="false"] {
+  opacity: 0.32;
+  filter: grayscale(0.45);
+}
+
+.damage-chip[data-active="true"] {
+  box-shadow: 0 0 0 1px rgba(242, 231, 204, 0.05) inset;
+}
+
 .damage-chip[data-tone="cosmic"] {
   border-color: rgba(146, 181, 255, 0.42);
   background: rgba(105, 126, 255, 0.12);

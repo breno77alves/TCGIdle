@@ -96,21 +96,43 @@
     };
   }
 
+  function normalizeDamageAffinity(meta) {
+    const profile = normalizeDamageProfile(meta);
+    return {
+      base: true,
+      cosmic: profile.cosmic > 0,
+      elemental: profile.elemental > 0,
+      magic: profile.magic > 0,
+      true: profile.true > 0,
+    };
+  }
+
   function getDamageEntries(meta, options) {
-    const settings = Object.assign({ includeBase: true, fixedOrder: true, showZero: true }, options);
+    const settings = Object.assign({ includeBase: true, fixedOrder: true, showZero: true, displayMode: "value" }, options);
+    const affinity = normalizeDamageAffinity(meta);
     const profile = normalizeDamageProfile(meta);
     const all = [
-      { tone: "base", label: "Base", value: profile.base },
-      { tone: "cosmic", label: "Cosmico", value: profile.cosmic },
-      { tone: "elemental", label: "Elemental", value: profile.elemental },
-      { tone: "magic", label: "Magico", value: profile.magic },
-      { tone: "true", label: "Verdadeiro", value: profile.true },
+      { tone: "base", label: "Base", value: profile.base, active: affinity.base },
+      { tone: "cosmic", label: "Cosmico", value: profile.cosmic, active: affinity.cosmic },
+      { tone: "elemental", label: "Elemental", value: profile.elemental, active: affinity.elemental },
+      { tone: "magic", label: "Magico", value: profile.magic, active: affinity.magic },
+      { tone: "true", label: "Verdadeiro", value: profile.true, active: affinity.true },
     ];
-    return all.filter((entry) => {
+    const filtered = all.filter((entry) => {
       if (entry.tone === "base" && !settings.includeBase) return false;
+      if (settings.displayMode === "affinity") return true;
       if (settings.showZero) return true;
       return entry.value > 0;
     });
+    if (settings.displayMode === "affinity") {
+      return filtered.map((entry) => ({
+        tone: entry.tone,
+        label: entry.label,
+        value: entry.active ? "ON" : "OFF",
+        active: entry.active,
+      }));
+    }
+    return filtered;
   }
 
   function describeScaleEntry(entry) {
@@ -218,7 +240,7 @@
   }
 
   function renderDamageStack(doc, entries, options) {
-    const settings = Object.assign({ compact: false, limit: 99, emptyLabel: "Sem dano extra" }, options);
+    const settings = Object.assign({ compact: false, limit: 99, emptyLabel: "Sem dano extra", useActiveState: false }, options);
     const wrap = doc.createElement("div");
     wrap.className = "damage-stack";
     if (settings.compact) wrap.classList.add("damage-stack-compact");
@@ -228,7 +250,8 @@
       const row = doc.createElement("div");
       row.className = "damage-chip";
       row.dataset.tone = entry.tone;
-       if (!entry.value) row.dataset.zero = "true";
+      if (!entry.value || entry.value === "OFF") row.dataset.zero = "true";
+      if (settings.useActiveState) row.dataset.active = String(Boolean(entry.active));
       row.innerHTML = "<span>" + entry.label + "</span><strong>" + entry.value + "</strong>";
       wrap.appendChild(row);
     });
@@ -355,7 +378,12 @@
       title: info.title,
       effectText: getEffectText(card, info),
       tokenLabel: getTokenLabel(card, info),
-      damageEntries: getDamageEntries(info.meta, { includeBase: true, fixedOrder: true, showZero: true }),
+      damageEntries: getDamageEntries(info.meta, {
+        includeBase: card.cardType === "action",
+        fixedOrder: true,
+        showZero: true,
+        displayMode: card.cardType === "creature" ? "affinity" : "value",
+      }),
       info: info,
     };
   }
@@ -428,7 +456,7 @@
     if (card.cardType === "creature") {
       const left = doc.createElement("aside");
       left.className = "card-side-panel card-rail-left card-damage-panel";
-      left.appendChild(renderDamageStack(doc, model.damageEntries));
+      left.appendChild(renderDamageStack(doc, model.damageEntries, { useActiveState: true }));
 
       const center = doc.createElement("div");
       center.className = "card-main-copy";

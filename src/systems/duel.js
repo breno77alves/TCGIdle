@@ -19,12 +19,6 @@
     return Number.isFinite(value) ? value : (Number.isFinite(fallback) ? fallback : 0);
   }
 
-  function getDefaultCreatureBaseDamage(stats) {
-    const power = stats && Number.isFinite(stats.power) ? stats.power : 0;
-    const speed = stats && Number.isFinite(stats.speed) ? stats.speed : 0;
-    return Math.max(5, roundToFive((power + speed) / 40));
-  }
-
   function normalizeDamageProfile(source, defaultBase) {
     const profile = source && source.damageProfile ? source.damageProfile : source || {};
     const rawElemental = profile.elemental || source && source.elementalDamage || 0;
@@ -94,6 +88,17 @@
     return base && Number.isFinite(base.tokenCount) ? base.tokenCount : 1;
   }
 
+  function buildDamageAffinity(source) {
+    const profile = normalizeDamageProfile(source, 0);
+    return {
+      base: true,
+      cosmic: profile.cosmic > 0,
+      elemental: profile.elemental > 0,
+      magic: profile.magic > 0,
+      true: profile.true > 0,
+    };
+  }
+
   function buildFighter(card, side, slotIndex, lane, equipmentCard) {
     const base = global.TCGIdleData.getCreature(card.baseId);
     const equipmentBase = equipmentCard ? global.TCGIdleData.getEquipment(equipmentCard.baseId) : null;
@@ -108,7 +113,7 @@
       name: base ? base.name : card.baseId,
       tribe: base ? base.tribe : null,
       portrait: base ? base.portrait : "",
-      damageProfile: normalizeDamageProfile(base, getDefaultCreatureBaseDamage(card.stats)),
+      damageAffinity: buildDamageAffinity(base),
       stats: Object.assign({}, card.stats),
       tokenCount: getFighterTokenCount(base),
       hpMax: card.stats.energy,
@@ -370,10 +375,13 @@
       target: attacker,
     });
 
-    const creaturePacket = materializeDamageProfile(attacker.damageProfile);
     const actionPacket = materializeDamageProfile(normalizeDamageProfile(action, 0));
-    const preModifier = addDamageBreakdown(emptyDamageBreakdown(), creaturePacket.totals);
-    addDamageBreakdown(preModifier, actionPacket.totals);
+    const preModifier = emptyDamageBreakdown();
+    if (attacker.damageAffinity && attacker.damageAffinity.base) preModifier.base = actionPacket.totals.base;
+    if (attacker.damageAffinity && attacker.damageAffinity.cosmic) preModifier.cosmic = actionPacket.totals.cosmic;
+    if (attacker.damageAffinity && attacker.damageAffinity.elemental) preModifier.elemental = actionPacket.totals.elemental;
+    if (attacker.damageAffinity && attacker.damageAffinity.magic) preModifier.magic = actionPacket.totals.magic;
+    if (attacker.damageAffinity && attacker.damageAffinity.true) preModifier.true = actionPacket.totals.true;
     preModifier.base = roundToFive(preModifier.base + attackEffects.flatDamage + resolveActionCheck(action, attacker, attackerSide, defender, detailLogs));
 
     const scaled = {
@@ -395,7 +403,7 @@
       rawDamage: rawDamage,
       finalDamage: finalDamage,
       breakdown: scaled,
-      creatureDamage: creaturePacket.totals,
+      creatureDamage: emptyDamageBreakdown(),
       actionDamage: actionPacket.totals,
       attackSources: attackEffects.logs,
       defendSources: defendEffects.logs,
