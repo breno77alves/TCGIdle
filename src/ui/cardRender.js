@@ -128,8 +128,9 @@
       return filtered.map((entry) => ({
         tone: entry.tone,
         label: entry.label,
-        value: entry.active ? "ON" : "OFF",
+        value: "",
         active: entry.active,
+        showValue: false,
       }));
     }
     return filtered;
@@ -250,9 +251,11 @@
       const row = doc.createElement("div");
       row.className = "damage-chip";
       row.dataset.tone = entry.tone;
-      if (!entry.value || entry.value === "OFF") row.dataset.zero = "true";
+      if (entry.showValue === false ? !entry.active : !entry.value) row.dataset.zero = "true";
       if (settings.useActiveState) row.dataset.active = String(Boolean(entry.active));
-      row.innerHTML = "<span>" + entry.label + "</span><strong>" + entry.value + "</strong>";
+      row.innerHTML = entry.showValue === false
+        ? "<span>" + entry.label + "</span>"
+        : "<span>" + entry.label + "</span><strong>" + entry.value + "</strong>";
       wrap.appendChild(row);
     });
 
